@@ -1,0 +1,195 @@
+@import url('https://fonts.googleapis.com/css?family=Raleway:400,700');
+
+* {
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;	
+	font-family: Raleway, sans-serif;
+}
+
+body {
+	background-size: 100% 100%;
+	box-shadow: 20px 20px 10px gray;
+	animation: slider 10s linear infinite;
+	overflow: hidden;
+
+}
+
+@keyframes slider {
+    0% {background-image: url('../images/house1.jpg');}
+	25% {background-image: url('../images/house2.jpg');}
+	50% {background-image: url('../images/house3.jpg');}
+	75% {background-image: url('../images/house4.jpg');}
+	100% {background-image: url('../images/house5.jpg');}
+}
+
+.container {
+    display: grid;
+    justify-content: space-around;
+    min-height: 100vh;
+    background: linear-gradient(90deg, rgba(11, 22, 35, 0.7) 50%, rgba(252, 194, 5, 0.7) 100%);
+    backdrop-filter: blur(5px); /* Blurs the background behind the container */
+    -webkit-backdrop-filter: blur(10px); /* For Safari support */
+}
+
+/* Make sure the header is fixed and spans the full width of the page */
+.header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background-color: #f6ff00;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+}
+
+/* Style for the logo on the left */
+.logo {
+    display: flex;
+    align-items: center;
+    margin-left: 10px;
+}
+
+.logo-image {
+    height: 50px;
+    width: auto;
+}
+
+/* Center-align the home and script text */
+.script-option {
+    background: transparent; /* Transparent background */
+    padding: 10px 20px; /* Add space inside the buttons */
+    margin: 0 20px; /* Adds horizontal space between the buttons */
+    border: none; /* Removes the border */
+    color: #0b1623; /* Font color */
+    font-size: 16px; /* Adjust the font size as needed */
+    cursor: pointer;
+    display: inline-block; /* Keeps the buttons side by side */
+    text-align: center;
+}
+
+.home-option {
+    background: transparent; /* Transparent background */
+    padding: 10px 20px; /* Add space inside the buttons */
+    margin: 0 20px; /* Adds horizontal space between the buttons */
+    background-color: #0b1623 0.2; /* Soft hover effect */
+    border-radius: 15px; /* Add rounded corners */
+    color: #0b1623; /* Font color */
+    font-size: 16px; /* Adjust the font size as needed */
+    cursor: pointer;
+    display: inline-block; /* Keeps the buttons side by side */
+    text-align: center;
+}
+
+
+/* Optional: Change the hover effect */
+.home-option:hover, .script-option:hover {
+    background-color: rgba(255, 255, 255, 1); /* Soft hover effect */
+    border-radius: 15px; /* Add rounded corners */
+}
+
+
+/* Ensure the home and script options stay aligned in the middle */
+.header-option {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-grow: 1; /* Ensures the section takes up available space for centering */
+}
+
+/* Style for the logout section on the right */
+.logout {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-btn {
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    color: #0b1623;
+    display: flex;
+    align-items: center;
+    padding: 10px 20px;
+}
+
+.dropdown-btn i {
+    margin-left: 5px; /* Space between text and icon */
+}
+
+.dropdown-content {
+    display: none; /* Hidden by default */
+    position: absolute;
+    background-color: #f9f9f9;
+    min-width: 120px;
+    box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
+    z-index: 1;
+    border-radius: 5px;
+    right: 0; /* Ensures dropdown is aligned to the right of the button */
+    top: 40px; /* Push the dropdown below the button */
+    overflow: hidden;
+}
+
+.dropdown-content a {
+    color: #0b1623;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    transition: background-color 0.1s ease;
+}
+
+.dropdown-content a i {
+    margin-right: 8px; /* Space between icon and text */
+}
+
+.dropdown-content a:hover {
+    background-color: rgba(246, 255, 0, 0.9); /* 50% transparency */
+}
+
+.logout.active .dropdown-content {
+    display: block; /* Show dropdown when active */
+}
+
+
+/* Styling for the options (user and materials) */
+.option {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 120px; /* Adds space to move below the fixed header */
+}
+
+.button_user, .button_materials, .button_feedbacks {
+    background-color: #ffffff;
+    color: #0b1623 ;
+    border-color: #ff000000;
+    height: 250px;
+    width: 250px;
+    padding: 15px 25px;
+    margin: 50px;
+    cursor: pointer;
+    font-size: 25px;
+    border-radius: 30px;
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: center;
+    justify-content: center;
+}
+
+.button_user .button_icon, .button_materials .fa-solid, .button_feedbacks .fa-regular {
+    margin-right: 20px;
+    font-size: 30px;
+}
+
+/* Add some styling for hover effects */
+.button_user:hover, .button_materials:hover, .button_feedbacks:hover {
+    background-color: #f6ff00;
+}
+
+

@@ -1,0 +1,98 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'housewise/user.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<script src="{% static 'housewise/javascript/user.js' %}"></script>
+<script src="{% static 'housewise/javascript/dropdown.js' %}"></script>
+
+<div class="container">
+    <div class="header">
+        <div class="logo">
+            <img src="{% static 'images/housewise.png' %}" alt="Logo" class="logo-image">
+        </div>
+        <div class="header-option">
+            <i class="fa-solid fa-user"></i>
+            <span class="user-text">User</span>  
+        </div>        
+        <div class="logout">
+            <button class="dropdown-btn">
+                <span> AdminKyle </span>
+                <i class="fas fa-chevron-down"></i>
+            </button>
+            <div class="dropdown-content">
+                <a href="#" class="profile-option" onclick="redirectToProfile()">
+                    <i class="fas fa-user">Profile </i> 
+                </a>
+                <a href="#" class="logout-option" onclick="redirectToLogout()">
+                    <i class="fas fa-sign-out-alt">Logout</i> 
+                </a>
+            </div>
+        </div>        
+    </div>
+    <!-- Dashboard section -->
+    <div class="dashboard-section">
+        <div class="dashboard">
+            <div class="dashboard-header">
+                <button class="back-btn" onclick="redirectToMenu()">
+                    <span>Back</span>
+                    <i class="fa-solid fa-arrow-left"></i>
+                </button>
+                <h2>Users</h2>
+            </div>
+
+            <!-- Users List -->
+            <ul class="user-list">
+                <li class="user-item" data-user-id="1">User 1</li>
+                <li class="user-item" data-user-id="2">User 2</li>
+                <li class="user-item" data-user-id="3">User 3</li>
+                <!-- Add more users as needed -->
+            </ul>
+        </div>
+
+        <!-- User Info Column -->
+        <div class="user-info" id="user-info">
+            <div class="user-details-header">
+                <h3>User Details</h3>
+                <!-- Feedbacks Button beside User Details -->
+                <div class="feedbacks-container">
+                    <button class="feedback-btn" onclick="openFeedbackModal()">
+                        <i class="fa-regular fa-comment-dots"></i> Feedbacks
+                    </button>
+                </div>
+            </div>
+            <p><strong>User ID:</strong> <span id="user-id">N/A</span></p>
+            <p><strong>Name:</strong> <span id="user-name">N/A</span></p>
+            <p><strong>Age:</strong> <span id="user-age">N/A</span></p>
+            <p><strong>Username:</strong> <span id="user-username">N/A</span></p>
+            <p><strong>Password:</strong> <span id="user-password">N/A</span></p>
+            <p><strong>Email:</strong> <span id="user-email">N/A</span></p>
+        
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button class="edit-btn">
+                    <i class="fas fa-edit"></i> Edit
+                </button>
+                <button class="delete-btn">
+                    <i class="fas fa-trash-alt"></i> Delete
+                </button>
+            </div>
+        </div>
+        
+        <!-- Modal for Feedbacks -->
+        <div id="feedbackModal" class="modal">
+            <div class="modal-content">
+                <span class="close-btn" onclick="closeFeedbackModal()">&times;</span>
+                <h2>Feedbacks</h2>
+                <p>Empty feedbacks</p>
+            </div>
+        </div>
+    
+    </div>
+</div>  
+
+<script>
+document.querySelector('.dropdown-btn').addEventListener('click', function() {
+    document.querySelector('.logout').classList.toggle('active');
+    console.log("Dropdown toggled");
+});
+</script>

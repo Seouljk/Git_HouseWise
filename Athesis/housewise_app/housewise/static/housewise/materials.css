@@ -1,0 +1,250 @@
+@import url('https://fonts.googleapis.com/css?family=Raleway:400,700');
+
+* {
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+	font-family: Raleway, sans-serif;
+}
+
+body {
+    background-color: antiquewhite;
+	background-size: 100% 100%;
+	box-shadow: 20px 20px 10px gray;
+	overflow: hidden;
+}
+
+.container {
+    display: grid;
+    justify-content: space-around;
+    min-height: 100vh;
+    background: linear-gradient(90deg, rgba(11, 22, 35, 0.7) 50%, rgba(252, 194, 5, 0.7) 100%);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+/* Header styling */
+.header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background-color: #f6ff00;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    margin-left: 10px;
+}
+
+.logo-image {
+    height: 50px;
+    width: auto;
+}
+
+
+.logout {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-btn {
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    color: #0b1623;
+    display: flex;
+    align-items: center;
+    padding: 10px 20px;
+}
+
+.header-option {
+    display: flex; /* Use flexbox for alignment */
+    align-items: center; /* Center vertically */
+}
+
+.header-option i {
+    font-size: 25px; /* Set the desired size for the icon */
+    line-height: 1; /* Reset line height to avoid extra space */
+}
+
+.header .header-option .material-text { 
+    font-weight: bold;
+    border-radius: 10px;
+    color: #0b1623; /* Font color */
+    font-size: 30px; /* Adjust the font size as needed */
+    text-align: center;
+    margin-left: 10px; /* Space between icon and text */
+}
+
+
+.dropdown-btn i {
+    margin-left: 5px; /* Space between text and icon */
+}
+
+.dropdown-content {
+    display: none; /* Hidden by default */
+    position: absolute;
+    background-color: #f9f9f9;
+    min-width: 120px;
+    box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
+    z-index: 1;
+    border-radius: 5px;
+    right: 0; /* Ensures dropdown is aligned to the right of the button */
+    top: 40px; /* Push the dropdown below the button */
+    overflow: hidden;
+}
+
+.dropdown-content a {
+    color: #0b1623;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    transition: background-color 0.1s ease;
+}
+
+.dropdown-content a i {
+    margin-right: 8px; /* Space between icon and text */
+}
+
+.dropdown-content a:hover {
+    background-color: rgba(246, 255, 0, 0.9); /* 50% transparency */
+}
+
+.logout.active .dropdown-content {
+    display: block; /* Show dropdown when active */
+}
+
+/* Dashboard Section */
+.dashboard-section {
+    display: grid;
+    grid-template-columns: 1fr 2fr; /* Two-column layout */
+    margin-top: 70px; /* Push content below the header */
+    height: calc(100vh - 70px); /* Full height minus header */
+    gap: 20px; /* Space between columns */
+    padding: 20px;
+    width: 100vw; /* Set width to full viewport width */
+    box-sizing: border-box; /* Include padding in width calculation */
+}
+
+/* Dashboard */
+.dashboard {
+    background-color: #ffffff;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    width: 100%; /* Ensure full width in the grid */
+}
+
+.dashboard-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.dashboard-section .dashboard .dashboard-header h2 {
+    font-size: 30px;
+    font-style:normal;
+
+}
+
+.back-btn {
+    background-color: #f6ff00;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 16px;
+    color: #0b1623;
+    display: flex;
+    flex-direction: row-reverse; /* Keeps the icon on the left */
+    align-items: center;
+    padding: 10px 20px;
+}
+
+.back-btn i {
+    margin-right: 8px; /* Add space between the text and the icon */
+    padding-right: 2px;
+    margin-left: -5px;
+}
+
+.back-btn:hover {
+    background-color: #ffd700;
+}
+
+/* Material List */
+.material-list {
+    margin-top: 20px; /* Space above the list */
+    padding: 0; /* Reset padding */
+}
+
+.material-item {
+    padding: 4px;
+    margin-bottom: 5px;
+    cursor: pointer;
+    background-color: #f6ff0052;
+    border-radius: 5px;
+    text-align: left; /* Align text to the left */
+}
+
+.material-row {
+    display: flex; /* Use flexbox for layout */
+    justify-content: space-between; /* Distribute space between material and price */
+}
+
+.material-row p {
+    font-size: 18px; /* Font size for material name */
+    margin: 0; /* Remove default margin */
+    width: 50%; /* Ensure both items take equal space */
+}
+
+.material-row .price {
+    text-align: right; /* Align price to the right */
+    font-weight: bold; /* Optional: make price bold */
+}
+
+.material-item:hover {
+    background-color: #ffd700;
+}
+
+.material-info {
+    background-color: #ffffff;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    width: 100%; /* Ensure full width in the grid */
+}
+
+.material-info h3 {
+    margin-bottom: 20px;
+    font-size: 30px;
+}
+
+/* Material List */
+.material-list {
+    margin-top: 20px; /* Space above the list */
+}
+
+.material-row {
+    display: flex; /* Use flexbox for layout */
+    justify-content: space-between; /* Distribute space between date and price */
+    margin-bottom: 10px; /* Space between each row */
+}
+
+.material-row p {
+    font-size: 20px; /* Font size for date and price */
+    margin: 0; /* Remove default margin */
+    width: 50%; /* Ensure both items take equal space */
+    text-align: left; /* Align text to the left */
+}
+
+.material-row .price {
+    text-align: right; /* Align price to the right */
+}
