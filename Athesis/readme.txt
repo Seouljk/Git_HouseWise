@@ -22,3 +22,8 @@ USER:
 
 housewisetest
 housewisetest123
+user
+
+adminkyle
+adminkyle123
+admin

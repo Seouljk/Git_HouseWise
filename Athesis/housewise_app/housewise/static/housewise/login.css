@@ -8,9 +8,9 @@
 }
 
 body {
-	background-size: 100% 100%;
+	background-size: auto;
 	box-shadow: 20px 20px 10px gray;
-	animation: slider 10s linear infinite;
+	animation: slider 20s linear infinite;
 	overflow: hidden;
 
 }
@@ -23,27 +23,49 @@ body {
 	100% {background-image: url('../images/house5.jpg');}
 }
 
-.container {
+.alert {
+    position: absolute; /* Set position to absolute */
+    top: 20px; /* Adjust the distance from the top as needed */
+    left: 50%; /* Center it horizontally */
+    transform: translateX(-50%); /* Shift it back by half its width to center */
     display: flex;
-    justify-content: space-around;
-    min-height: 100vh;
-    background: linear-gradient(90deg, rgba(11, 22, 35, 0.7) 50%, rgba(252, 194, 5, 0.7) 100%);
-    backdrop-filter: blur(10px); /* Blurs the background behind the container */
-    -webkit-backdrop-filter: blur(10px); /* For Safari support */
+    background-color: #f8d7da;
+    color: #721c24;
+    padding: 15px;
+    margin-bottom: 20px;
+    border: 1px solid #f5c6cb;
+    border-radius: 5px;
+	transition: all;
+}
+
+.alert__message {
+    margin: 0;
 }
 
 
 
+.container {
+    display: flex;
+    justify-content: space-around;
+	align-items: center;
+	height: 100vh;
+	width: 100vw;
+    background: linear-gradient(96deg, rgba(11, 22, 35, 0.7) 40%, rgba(252, 194, 5, 0.7) 100%);
+    backdrop-filter: blur(1px); /* Blurs the background behind the container */
+    -webkit-backdrop-filter: blur(1px); /* For Safari support */
+	padding: 100px;
+	border-radius: 10px;
+}
+
 .screen {		
 	background: linear-gradient(90deg, #ffffff, #ffea00);		
-	margin-top: 50;
 	position: relative;	
 	height: 600px;
 	width: 360px;	
 	box-shadow: 0px 0px 24px #000000;
 }
 .screen:hover {
-    box-shadow: 0 8px 20px rgba(255, 255, 255, 3); /* Enhanced shadow on hover */
+    box-shadow: 0 8px 20px rgba(205, 180, 110, 3); /* Enhanced shadow on hover */
 }	
 
 .screen__content {
@@ -207,20 +229,19 @@ body {
 
 .logo-container {
     display: flex;
-	margin-top: 50;
-    justify-content: space-around;
     height: 575;
     background: transparent; /* Keep the container's background transparent */
+	margin-left: 20px;
 }
 
 .logo-image {
-    max-width: 350px;
+    width: 90%;
     height: auto; /* Maintain aspect ratio */
-    padding: 10px; /* Optional: Adds a little padding inside the image */
-    border-radius: 8px; /* Optional: Give the image rounded corners */
-    transition: box-shadow 1s ease; /* Optional, for a hover effect */
+    border-radius: 10px; /* Optional: Give the image rounded corners */
+    transition: box-shadow 0.3s ease; /* Optional, for a hover effect */
+
 }
 
 .logo-image:hover {
-    box-shadow: 0 8px 20px rgba(255, 255, 255, 2.7); /* Enhanced shadow on hover */
+    box-shadow: 0 8px 20px rgba(205, 180, 110, 3); /* Enhanced shadow on hover */
 }

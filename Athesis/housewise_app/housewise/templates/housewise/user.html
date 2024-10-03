@@ -15,37 +15,43 @@
             <span class="user-text">User</span>  
         </div>        
         <div class="logout">
-            <button class="dropdown-btn">
-                <span> AdminKyle </span>
+            <button class="dropdown-btn" data-username="{{ request.user.username }}">
+                <span> {{ request.user.username }} </span>
                 <i class="fas fa-chevron-down"></i>
             </button>
             <div class="dropdown-content">
                 <a href="#" class="profile-option" onclick="redirectToProfile()">
-                    <i class="fas fa-user">Profile </i> 
+                    <i class="fas fa-user"></i> Profile
                 </a>
                 <a href="#" class="logout-option" onclick="redirectToLogout()">
-                    <i class="fas fa-sign-out-alt">Logout</i> 
+                    <i class="fas fa-sign-out-alt"></i> Logout
                 </a>
             </div>
-        </div>        
+        </div>
     </div>
     <!-- Dashboard section -->
     <div class="dashboard-section">
         <div class="dashboard">
             <div class="dashboard-header">
-                <button class="back-btn" onclick="redirectToMenu()">
-                    <span>Back</span>
-                    <i class="fa-solid fa-arrow-left"></i>
-                </button>
+                <a href="{% url 'menu' user.username %}" class="back-btn">
+                    <i class="fa-solid fa-arrow-left"></i> Back
+                </a>
                 <h2>Users</h2>
             </div>
 
             <!-- Users List -->
             <ul class="user-list">
-                <li class="user-item" data-user-id="1">User 1</li>
-                <li class="user-item" data-user-id="2">User 2</li>
-                <li class="user-item" data-user-id="3">User 3</li>
-                <!-- Add more users as needed -->
+                {% if users %}
+                    {% for user in users %}
+                        <li class="user-item">
+                            <button class="user-button" onclick="showUserInfo('{{ user.user_id }}', '{{ user.name }}', '{{ user.age }}', '{{ user.username }}', '{{ user.password }}', '{{ user.email }}')">
+                                {{ user.username }} 
+                            </button>
+                        </li>
+                    {% endfor %}
+                {% else %}
+                    <li>No users found.</li>
+                {% endif %}
             </ul>
         </div>
 
@@ -60,12 +66,12 @@
                     </button>
                 </div>
             </div>
-            <p><strong>User ID:</strong> <span id="user-id">N/A</span></p>
-            <p><strong>Name:</strong> <span id="user-name">N/A</span></p>
-            <p><strong>Age:</strong> <span id="user-age">N/A</span></p>
-            <p><strong>Username:</strong> <span id="user-username">N/A</span></p>
-            <p><strong>Password:</strong> <span id="user-password">N/A</span></p>
-            <p><strong>Email:</strong> <span id="user-email">N/A</span></p>
+            <p><strong>User ID:</strong> <span id="user-id"></span></p>
+            <p><strong>Name:</strong> <span id="user-name"></span></p>
+            <p><strong>Age:</strong> <span id="user-age"></span></p>
+            <p><strong>Username:</strong> <span id="user-username"></span></p>
+            <p><strong>Password:</strong> <span id="user-password"></span></p>
+            <p><strong>Email:</strong> <span id="user-email"></span></p>
         
             <!-- Action Buttons -->
             <div class="action-buttons">
@@ -75,6 +81,31 @@
                 <button class="delete-btn">
                     <i class="fas fa-trash-alt"></i> Delete
                 </button>
+            </div>
+            <hr class="separator-line">
+             <!-- Login Logs -->
+             <div class="logs">
+                <h4 class="logs-heading">Login Logs:</h4>
+                <div class="log-entries">
+                    {% if selected_user %}
+                        {% for session in login_sessions %}
+                            <div class="log-entry">
+                                <p><strong>Login Date & Time:</strong> {{ session.login_time }}</p>
+                                <p><strong>Duration:</strong> 
+                                    {% if session.login_duration %}
+                                        {{ session.login_duration }}
+                                    {% else %}
+                                        Still logged in
+                                    {% endif %}
+                                </p>
+                            </div>
+                        {% empty %}
+                            <div class="log-entry">No login logs available.</div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="log-entry">Select a user to view their login logs.</div>
+                    {% endif %}
+                </div>
             </div>
         </div>
         
@@ -91,6 +122,7 @@
 </div>  
 
 <script>
+    
 document.querySelector('.dropdown-btn').addEventListener('click', function() {
     document.querySelector('.logout').classList.toggle('active');
     console.log("Dropdown toggled");

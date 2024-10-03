@@ -7,6 +7,14 @@
 
 
 <div class="container">
+<!-- Display messages -->
+{% if messages %}
+<div class="alert">
+    {% for message in messages %}
+        <div class="alert__message">{{ message }}</div>
+    {% endfor %}
+</div>
+{% endif %}
     <div class="header">
         <div class="logo">
             <img src="{% static 'images/housewise.png' %}" alt="Logo" class="logo-image">
@@ -20,8 +28,8 @@
             </button>       
         </div>        
         <div class="logout">
-            <button class="dropdown-btn">
-                <span> AdminKyle </span> <!-- Text for the dropdown button -->
+            <button class="dropdown-btn" data-username="{{ username }}">
+                <span> {{ request.user.username }} </span> <!-- Text for the dropdown button -->
                 <i class="fas fa-chevron-down"></i> <!-- Dropdown arrow icon -->
             </button>
             <div class="dropdown-content">

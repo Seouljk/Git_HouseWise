@@ -1,18 +1,25 @@
+
+function redirectToLogout() {
+    const username = document.querySelector('.dropdown-btn').dataset.username;
+    window.location.href = `/housewise/logout/`;
+}
+
 function redirectToUser() {
-    // Redirect to the user page
-    window.location.href = "/housewise/menu/user";
+    const username = document.querySelector('.dropdown-btn').dataset.username;
+    window.location.href = `/housewise/${username}/menu/user/`;
 }
 
 function redirectToMaterials() {
-    // Redirect to the materials page
-    window.location.href = "/housewise/menu/materials";
+    const username = document.querySelector('.dropdown-btn').dataset.username;
+    window.location.href = `/housewise/${username}/menu/materials/`;
 }
 
 function redirectToFeedbacks() {
-    window.location.href = "/housewise/menu/feedbacks";
+    const username = document.querySelector('.dropdown-btn').dataset.username;
+    window.location.href = `/housewise/${username}/menu/feedbacks/`;
 }
 
 function redirectToScripts() {
-    window.location.href = "/housewise/scripts";
+    const username = document.querySelector('.dropdown-btn').dataset.username;
+    window.location.href = `/housewise/${username}/scripts/`;
 }
-

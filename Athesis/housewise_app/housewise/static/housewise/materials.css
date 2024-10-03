@@ -165,15 +165,14 @@ body {
     font-size: 16px;
     color: #0b1623;
     display: flex;
-    flex-direction: row-reverse; /* Keeps the icon on the left */
+    flex-direction: row; /* Change this to 'row' to place the icon on the left */
     align-items: center;
-    padding: 10px 20px;
+    padding: 10px 15px;
+    text-decoration: none; /* This will remove the underline */
 }
 
 .back-btn i {
-    margin-right: 8px; /* Add space between the text and the icon */
     padding-right: 2px;
-    margin-left: -5px;
 }
 
 .back-btn:hover {
