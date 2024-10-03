@@ -31,6 +31,25 @@ body {
     -webkit-backdrop-filter: blur(10px); /* For Safari support */
 }
 
+.alert {
+    position: absolute; /* Set position to absolute */
+    top: 20px; /* Adjust the distance from the top as needed */
+    left: 50%; /* Center it horizontally */
+    transform: translateX(-50%); /* Shift it back by half its width to center */
+    display: flex;
+    background-color: #f8d7da;
+    color: #721c24;
+    padding: 15px;
+    margin-bottom: 20px;
+    border: 1px solid #f5c6cb;
+    border-radius: 5px;
+	transition: all;
+}
+
+.alert__message {
+    margin: 0;
+}
+
 .back-button {
     display: flex;
     align-items: center;
@@ -86,9 +105,9 @@ body {
     background-color: #e9eae5d7;
     padding: 20px;
     display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    height: 92.2%;
+    flex-direction: column; /* Stack child elements */
+    justify-content: flex-start; /* Align items at the start */
+    height: 95.2%;
     border-radius: 1%;
 }
 
@@ -97,7 +116,6 @@ body {
     display: flex;
     flex-direction: column; /* Stack child elements */
     justify-content: flex-start;
-    overflow: auto; /* Allow scrolling if content overflows */
 }
 
 .right-side > .details > div {
@@ -107,8 +125,13 @@ body {
 }
 
 .right-side > .details > div:hover {
-    background-color: yellow; /* Glow effect on hover for individual details only */
-    cursor: pointer;
+    background-color: #ffeb3b; /* Glow effect on hover for individual details only */
+}
+
+/* Disable hover effect when editing */
+.right-side > .details.editing > div:hover {
+    background-color: transparent; /* Remove hover effect */
+    pointer-events: none; /* Optional: prevent pointer events */
 }
 
 .edit-icon {
@@ -116,6 +139,10 @@ body {
     float: right; /* Align edit icon to the right */
     cursor: pointer;
     color: #0b1623;
+    background-color: transparent; /* Transparent background */
+    border: none; /* Remove borders */
+    padding: 0; /* Remove padding */
+    margin-left: 10px; /* Add some space between the icon and input field */
 }
 
 /* Keep the existing edit icon hover effect */
@@ -124,13 +151,38 @@ body {
 }
 
 .separator-line {
-    margin: 20px 0;
+    margin: 10px 0;
     border: 2px solid #000000;
+}
+
+.highlight {
+    background-color: #ffeb3b; /* Yellow background for highlight */
 }
 
 .logs {
     flex: 1; /* Take up the remaining half */
-    margin-top: 10px; /* Space above logs */
+    overflow-y: auto; /* Make logs section scrollable */
+    max-height: 300px; /* Set a max height for the scrollable area */
+    border: 1px solid #ccc; /* Optional: add a border for clarity */
+    padding: 0px; /* Optional: add padding inside the logs area */
+    position: relative; /* Ensure child elements can be positioned relative to this */
+}
+
+/* Custom scrollbar styles */
+.log-entries {
+    overflow-y: scroll; /* Enable vertical scrolling */
+    scrollbar-width: thin; /* For Firefox */
+    scrollbar-color: blue transparent; /* Scrollbar color */
+}
+
+/* For Webkit browsers (Chrome, Safari, etc.) */
+.log-entries::-webkit-scrollbar {
+    width: 8px; /* Narrow scrollbar */
+}
+
+.log-entries::-webkit-scrollbar-thumb {
+    background-color: blue; /* Scrollbar color */
+    border-radius: 10px; /* Rounded scrollbar */
 }
 
 .log-entry {
@@ -140,8 +192,99 @@ body {
     margin-bottom: 5px; /* Space between log entries */
 }
 
+/* Style the heading of logs */
 .logs h4 {
     margin-bottom: 15px; /* Adjust this value as needed */
     font-size: 20px;
     font-weight: bolder;
+}
+
+/* Sticky header styles */
+.logs-heading {
+    position: sticky; /* Make the heading sticky */
+    top: 0; /* Set the top position when sticky */
+    background-color: #e9eae5; /* Same background color as the logs */
+    z-index: 1; /* Ensure it's above the log entries */
+    padding: 10px; /* Optional: add some padding */
+    margin-bottom: 10px; /* Space below the heading */
+}   
+
+/* Custom Scrollbar Styles */
+.logs::-webkit-scrollbar {
+    width: 8px; /* Narrower scrollbar */
+}
+
+.logs::-webkit-scrollbar-thumb {
+    background: rgb(0, 17, 255); /* Yellow scrollbar */
+    border-radius: 10px; /* Rounded edges for the scrollbar */
+}
+
+.logs::-webkit-scrollbar-track {
+    background: #f1f1f179; /* Light gray track for scrollbar */
+}
+
+/* Add this CSS for the button container */
+.button-container {
+    display: flex;
+    justify-content: flex-end; /* Align the button to the right */
+    margin-top: 10px; /* Space above the button */
+}
+
+.save-btn {
+    background-color: #d3d3d3; /* Light gray background */
+    color: #a9a9a9; /* Dark gray text */
+    border: 1px solid #a9a9a9; /* Gray border */
+    border-radius: 5px; /* Rounded corners */
+    padding: 10px 12px; /* Padding for better clickability */
+    font-size: 16px; /* Font size */
+    cursor: not-allowed; /* Change cursor to indicate it's disabled */
+    margin-bottom: 10px; /* Space below the button */
+    width: 30%; /* Button width */
+    transition: background-color 0.3s ease, color 0.3s ease; /* Smooth transition */
+}
+
+/* Hover effect for disabled button */
+.save-btn:hover {
+    background-color: #d3d3d3; /* Keep the same background color on hover when disabled */
+    color: #a9a9a9; /* Keep the text color unchanged */
+    cursor: not-allowed; /* Ensure the disabled state cursor stays */
+}
+
+/* Active state for the button (when it's enabled) */
+.save-btn.enabled {
+    background-color: #069337; /* Green background when enabled */
+    color: white; /* White text when enabled */
+    border-color: #069337; /* Green border when enabled */
+    cursor: pointer; /* Change cursor to pointer to show it's clickable */
+}
+
+/* Hover effect for the enabled button */
+.save-btn.enabled:hover {
+    background-color: #047a2b; /* Darker green on hover when enabled */
+    color: white; /* Ensure the text remains white */
+}
+
+/* Input Fields Styles */
+input[type="text"],
+input[type="email"],
+input[type="password"] {
+    background-color: transparent; /* Transparent background */
+    border: none; /* Remove border */
+    color: #0b1623; /* Match text color */
+    font-size: 20px; /* Match font size with the span */
+    font-family: Raleway, sans-serif; /* Ensure same font family */
+    outline: none; /* Remove outline on focus */
+}
+
+/* Optionally, add a hover effect */
+input[type="text"]:hover,
+input[type="email"]:hover,
+input[type="password"]:hover {
+    border-bottom: 2px solid #000000; /* Optional: Add underline on hover */
+}
+
+/* Disabled state styles */
+input[disabled] {
+    color: #0b1623; /* Text color */
+    opacity: 1; /* Ensure the text is visible even when disabled */
 }

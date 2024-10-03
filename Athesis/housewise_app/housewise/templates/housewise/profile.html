@@ -2,51 +2,97 @@
 <link rel="stylesheet" href="{% static 'housewise/profile.css' %}">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-<script src="{% static 'housewise/javascript/scripts.js' %}"></script>
+<script src="{% static 'housewise/javascript/profile.js' %}"></script>
 
 <div class="container">
-    <div class="back-button">
-        <button class="back-btn" onclick="redirectToMenu()">
-            <i class="fa-solid fa-arrow-left"></i>
-        </button>
-    </div>
-    <div class="content">
-        <div class="left-side">
-            <div class="profile-picture">
-                <img src="{% static 'images/profile.jpg' %}" alt="Profile Picture" class="profile-image">
+<!-- Display messages -->
+{% if messages %}
+<div class="alert">
+    {% for message in messages %}
+        <div class="alert__message">{{ message }}</div>
+    {% endfor %}
+</div>
+{% endif %}
+    <form method="POST" id="profile-form">
+        {% csrf_token %}
+        <div class="back-button">
+            <a href="{% url 'menu' user.username %}" class="back-btn">
+                <i class="fa-solid fa-arrow-left"></i>
+            </a>
+        </div>
+        <div class="content">
+            <div class="left-side">
+                <div class="profile-picture">
+                    <img src="{% static 'images/profile.jpg' %}" alt="Profile Picture" class="profile-image">
+                </div>
+            </div>
+            <div class="right-side">
+                <div class="details">
+                    <!-- Editable Name Field -->
+                    <div class="name">
+                        <span>Name: </span>
+                        <input type="text" id="user-name" name="name" value="{{ user.name }}" disabled>
+                        <button type="button" class="edit-icon" onclick="enableEditing('user-name')">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </button>
+                    </div>
+
+                    <!-- Editable Username Field -->
+                    <div class="username">
+                        <span>Username: </span>
+                        <input type="text" id="user-username" name="username" value="{{ user.username }}" disabled>
+                        <button type="button" class="edit-icon" onclick="enableEditing('user-username')">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </button>
+                    </div>
+
+                    <!-- Editable Email Field -->
+                    <div class="email-add">
+                        <span>Email: </span>
+                        <input type="email" id="user-email" name="email" value="{{ user.email }}" disabled>
+                        <button type="button" class="edit-icon" onclick="enableEditing('user-email')">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </button>
+                    </div>
+
+                    <!-- Editable Password Field -->
+                    <div class="password">
+                        <span>Password: </span>
+                        <input type="password" id="user-password" name="password" value="" disabled>
+                        <button type="button" class="edit-icon" onclick="enableEditing('user-password')">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </button>
+                    </div>
+
+                    <!-- Editable Birthdate Field -->
+                    <div class="birth-date">
+                        <span>Age: </span>
+                        <input type="text" id="user-birthdate" name="age" value="{{ user.age }}" disabled>
+                        <button type="button" class="edit-icon" onclick="enableEditing('user-birthdate')">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Save Button -->
+                <div class="button-container">
+                    <button type="submit" class="save-btn" id="save-btn" disabled>Save</button>
+                </div>
+
+                <hr class="separator-line">
+
+                <!-- Login Logs -->
+                <div class="logs">
+                    <h4 class="logs-heading">Login Logs:</h4>
+                    <div class="log-entries">
+                        {% for session in login_sessions %}
+                            <div class="log-entry">{{ session.login_time }}</div>
+                        {% empty %}
+                            <div class="log-entry">No login logs available.</div>
+                        {% endfor %}
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="right-side">
-            <div class="details">
-                <div class="name">
-                    <span>Name: </span><span id="user-name">John Doe</span>
-                    <i class="fa-solid fa-pen-to-square edit-icon"></i>
-                </div>
-                <div class="username">
-                    <span>Username: </span><span id="user-username">john.doe</span>
-                    <i class="fa-solid fa-pen-to-square edit-icon"></i>
-                </div>
-                <div class="email-add">
-                    <span>Email: </span><span id="user-email">john.doe@example.com</span>
-                    <i class="fa-solid fa-pen-to-square edit-icon"></i>
-                </div>
-                <div class="password">
-                    <span>Password: </span><span id="user-password">********</span>
-                    <i class="fa-solid fa-pen-to-square edit-icon"></i>
-                </div>
-                <div class="birth-date">
-                    <span>Birth Date: </span><span id="user-birthdate">1990-01-01</span>
-                    <i class="fa-solid fa-pen-to-square edit-icon"></i>
-                </div>
-            </div>
-            <hr class="separator-line">
-            <div class="logs">
-                <h4>Login Logs:</h4>
-                <div class="log-entry">2024-09-01 10:15 AM</div>
-                <div class="log-entry">2024-09-15 11:30 AM</div>
-                <div class="log-entry">2024-09-20 03:45 PM</div>
-            </div>
-        </div>        
-    </div>
+    </form>
 </div>
-

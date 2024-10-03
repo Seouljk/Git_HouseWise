@@ -11,7 +11,7 @@
             <img src="{% static 'images/housewise.png' %}" alt="Logo" class="logo-image">
         </div>
         <div class="header-option">
-            <button class="home-option" onclick="redirectToMenu()">
+            <button class="home-option" onclick="redirectToMenu('{{ username }}')">
                 <span class="Home">Home</span>
             </button>
             <button class="script-option" onclick="redirectToScripts()">
