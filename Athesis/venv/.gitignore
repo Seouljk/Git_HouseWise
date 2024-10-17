@@ -1,0 +1,18 @@
+# Ignore the virtual environment
+venv/
+# or if your virtual environment is named something else
+# myenv/
+
+# Ignore the credentials file
+secure-stone-412401-bef03f4658ac.json
+
+# Ignore other Python cache files and compiled files
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Ignore database files (if applicable)
+*.sqlite3
+
+# Ignore environment variable files
+.env

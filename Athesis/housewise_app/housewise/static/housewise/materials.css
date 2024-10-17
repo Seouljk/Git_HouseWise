@@ -120,6 +120,10 @@ body {
     background-color: rgba(246, 255, 0, 0.9); /* 50% transparency */
 }
 
+.dropdown-content.active {
+    display: block;
+}
+
 .logout.active .dropdown-content {
     display: block; /* Show dropdown when active */
 }
@@ -179,41 +183,42 @@ body {
     background-color: #ffd700;
 }
 
-/* Material List */
 .material-list {
-    margin-top: 20px; /* Space above the list */
-    padding: 0; /* Reset padding */
+    list-style: none;
+    margin-top: 20px;
+    overflow-y: auto;
+    scrollbar-width: medium; /* Set the scrollbar width */
+    scrollbar-color: rgb(44, 44, 106) transparent; /* Set the scrollbar color */
+    max-height: 500px;
 }
 
 .material-item {
-    padding: 4px;
-    margin-bottom: 5px;
-    cursor: pointer;
-    background-color: #f6ff0052;
-    border-radius: 5px;
-    text-align: left; /* Align text to the left */
-}
-
-.material-row {
-    display: flex; /* Use flexbox for layout */
-    justify-content: space-between; /* Distribute space between material and price */
-}
-
-.material-row p {
-    font-size: 18px; /* Font size for material name */
-    margin: 0; /* Remove default margin */
-    width: 50%; /* Ensure both items take equal space */
-}
-
-.material-row .price {
-    text-align: right; /* Align price to the right */
-    font-weight: bold; /* Optional: make price bold */
+    padding: 5px;   
+    margin: 5px;
+    cursor: pointer;    
+    background-color: transparent;
+    border: 2px solid #1900ff; 
+    border-radius: 20px;
+    text-align: center;
+    font-size: 20px;
 }
 
 .material-item:hover {
     background-color: #ffd700;
 }
 
+.material-button {
+    background-color: transparent; /* Make button transparent */
+    border: 1px solid transparent; /* Optional: keep border consistent */
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 15px; /* Set font size to 12px */
+    font-family:Arial, Helvetica, sans-serif;
+    padding: 10px 20px; /* Adjust padding as needed */
+    width: 100%; /* Make the button fill the list item */
+    box-shadow: none; /* Remove any shadow for transparency */
+    color: #0b1623; /* Ensure text is visible */
+}
 .material-info {
     background-color: #ffffff;
     padding: 20px;
@@ -226,24 +231,23 @@ body {
     font-size: 30px;
 }
 
-/* Material List */
-.material-list {
-    margin-top: 20px; /* Space above the list */
+
+#material-list {
+    max-height: 300px;
+    overflow-y: auto;
 }
 
 .material-row {
-    display: flex; /* Use flexbox for layout */
-    justify-content: space-between; /* Distribute space between date and price */
-    margin-bottom: 10px; /* Space between each row */
+    padding: 10px 0;
+    border-bottom: 1px solid #ccc;
 }
 
-.material-row p {
-    font-size: 20px; /* Font size for date and price */
-    margin: 0; /* Remove default margin */
-    width: 50%; /* Ensure both items take equal space */
-    text-align: left; /* Align text to the left */
+.material-row p{
+    font-size: 20px;
+    font-family: 'Times New Roman', Times, serif;
 }
 
-.material-row .price {
-    text-align: right; /* Align price to the right */
+.material-list.scrollable {
+    max-height: 300px;  /* Set maximum height */
+    overflow-y: auto;  /* Enable vertical scroll */
 }

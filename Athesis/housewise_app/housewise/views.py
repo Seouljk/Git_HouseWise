@@ -1,15 +1,73 @@
 from django.shortcuts import render, redirect,  get_object_or_404
-from django.contrib.auth import login, logout
+from django.contrib.auth import login, logout, authenticate
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
-from django.http import JsonResponse
+from django.http import JsonResponse, StreamingHttpResponse
 from django.views.decorators.cache import never_cache
 from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_GET
 import json
+import time
+#SCRIPTS
 
-from .models import UserHousewise, LoginSession, UserType 
+#MOBILE APP PACKAGES 
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
+from rest_framework import status
+from rest_framework_simplejwt.tokens import RefreshToken
+
+from django.db.models import Q
+from .models import UserHousewise, LoginSession, UserType, Materials, MaterialPrice
+
+#MOBILE APP API
+@api_view(['POST'])
+def login_user(request):
+    username_or_email = request.data.get('username_or_email')
+    password = request.data.get('password')
+
+    if username_or_email is None or password is None:
+        return Response({"error": "Please provide both username/email and password"}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        # First try to get user by username
+        try:
+            user = UserHousewise.objects.get(username=username_or_email)
+        except UserHousewise.DoesNotExist:
+            # Then try to get user by email
+            try:
+                user = UserHousewise.objects.get(email=username_or_email)
+            except UserHousewise.DoesNotExist:
+                user = None
+
+        # Check if the user exists and verify the password
+        if user and user.check_password(password):
+            # Perform actions upon successful login
+            if user.user_type.user_type == 'user':  # Modify to check for user type
+                user.last_login = timezone.now()
+                user.save()
+
+                # Create a new login session
+                login_session = LoginSession.objects.create(user=user, login_time=user.last_login)
+
+                # You might want to return session details or tokens here
+                return Response({
+                    "message": "Login successful",
+                    "user_id": user.user_id,  # Correct access to the primary key
+                    "username": user.username,
+                    "email": user.email,
+                    "login_session_id": login_session.loginsession_id  # Include the session ID if needed
+                }, status=status.HTTP_200_OK)
+
+            return Response({"error": "You do not have permission to access this area."}, status=status.HTTP_403_FORBIDDEN)
+        else:
+            return Response({"error": "Invalid username or password."}, status=status.HTTP_401_UNAUTHORIZED)
+
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
     
 def login_view(request):
     if request.method == 'POST':  # Handle login
@@ -126,7 +184,39 @@ def user_login_sessions(request):
 @login_required(login_url='/housewise/')
 @never_cache
 def material_view(request, username):
-    return render(request, 'housewise/materials.html', {'username': username})
+    # Retrieve all materials
+    materials = Materials.objects.all()
+    
+    # Create a list of materials with their latest prices
+    materials_with_latest_price = []
+    
+    for material in materials:
+        latest_price = MaterialPrice.objects.filter(materials=material).order_by('-date_time').first()
+        if latest_price:
+            materials_with_latest_price.append({
+                'id': material.materials_id,  # Add material id for later AJAX use
+                'name': material.materials_name,
+                'latest_price': latest_price.amount
+            })
+
+    return render(request, 'housewise/materials.html', {
+        'username': username,
+        'materials_with_latest_price': materials_with_latest_price
+    })
+
+
+# New view to get all prices for a material
+@login_required(login_url='/housewise/')
+def get_material_prices(request):
+    material_id = request.GET.get('material_id')
+    if material_id:
+        prices = MaterialPrice.objects.filter(materials_id=material_id).order_by('-date_time')
+        price_data = [
+            {'date_time': price.date_time.strftime('%Y-%m-%d %H:%M:%S'), 'amount': str(price.amount)}
+            for price in prices
+        ]
+        return JsonResponse({'prices': price_data})
+    return JsonResponse({'error': 'No material found'}, status=400)
 
 @login_required(login_url='/housewise/')
 @never_cache
@@ -137,6 +227,7 @@ def feedbacks_view(request, username):
 @never_cache
 def script_view(request, username):
     return render(request, 'housewise/scripts.html', {'username': username})
+    
 
 @login_required(login_url='/housewise/')
 @never_cache

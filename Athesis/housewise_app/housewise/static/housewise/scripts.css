@@ -153,8 +153,8 @@ body {
 .script-dashboard {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
-    justify-content: center;
+    align-items: center; /* Center items horizontally */
+    justify-content: center; /* Center items vertically */
     margin-top: 80px; /* To account for the header height */
     width: 100%;
     padding: 20px;
@@ -169,6 +169,8 @@ body {
     align-items: center;
     width: 100%;
 }
+
+
 
 .status-left {
     display: flex;
@@ -203,6 +205,26 @@ body {
     font-size: 18px;
 }
 
+
+.crawler-status-message {
+    border: 1px solid #000000;
+    border-radius: 20px;
+    padding: 10px;
+    margin-right: 82px ;
+    text-align: center;
+    background-color: transparent; /* Transparent background */
+}
+
+/* Optional: You can add styles for the colors if you want */
+.crawler-status-message.on {
+    color: green; /* Color for when crawler is on */
+}
+
+.crawler-status-message.off {
+    color: red; /* Color for when crawler is off */
+}
+
+
 .switch {
     position: relative;
     right: 0%;
@@ -224,7 +246,7 @@ body {
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: #ccc;
+    background-color: #e6bdbd;
     transition: 0.4s;
     border-radius: 34px;
 }
@@ -236,7 +258,7 @@ body {
     width: 20px;
     border-radius: 50%;
     background-color: white;
-    transition: 0.4s;
+    transition: 0.8s;
     left: 4px;
     bottom: 2.5px;
 }
@@ -247,6 +269,61 @@ input:checked + .slider {
 
 input:checked + .slider:before {
     transform: translateX(24px);
+}
+
+
+.timer {
+    display: flex;
+    flex-direction: column; /* Stack title and countdown vertically */
+    justify-content: center; /* Center content vertically */
+    align-items: center; /* Center content horizontally */
+    height: 150px; /* Increase the height to accommodate both title and countdown */
+    width: 100%; /* Ensure the timer spans the container */
+    background-color: #f0f0f072;
+    border-radius: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin: 20px 0;
+    padding: 20px;
+}
+
+.countdown-title {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 10px; /* Adds space between title and countdown */
+    text-align: center; /* Center the title text */
+    color: #0b1623;
+}
+
+.countdown {
+    font-size: 48px;
+    font-weight: bold;
+    font-family: 'Raleway', sans-serif;
+    color: #0b1623;
+    background: linear-gradient(90deg, rgb(42, 146, 36), rgb(5, 71, 252));
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-align: center; /* Ensure text is centered */
+    letter-spacing: 5px;
+    width: 100%; /* Ensure the text spans the width of its parent */
+    display: flex; /* Use flexbox for layout */
+    justify-content: center; /* Center the countdown items */
+    align-items: baseline; /* Align items to baseline */
+}
+
+.countdown-label {
+    font-size: 12px; /* Adjust label font size */
+    margin-top: 0;
+}
+
+.countdown-label span {
+    margin-right: 20px; /* Space between each label */
+    margin-left: 30px;
+    color:#000000;
+}
+
+.countdown-label span:last-child {
+    margin-right: 21; /* Remove margin from the last label */
 }
 
 /* Horizontal line separating top and bottom sections */
@@ -265,3 +342,28 @@ input:checked + .slider:before {
     background-color: transparent;
     height: 400px;
 }
+
+
+.script-log {
+    width: 100%; /* Make it take full width */
+    max-height: 400px; /* Limit the height for scrolling */
+    min-height:320px;
+    overflow-y: auto; /* Enable vertical scrolling */
+    border: 1px solid #ddd; /* Optional: Add a border */
+    border-radius: 10px; /* Optional: Add rounded corners */
+    padding: 10px; /* Padding inside the log section */
+    background-color: #f9f9f9; /* Background color */
+    margin-top: 10px;
+}
+
+.log-container {
+    height: 300px; /* Set a height for the log container */
+    overflow-y: auto; /* Enable vertical scrolling */
+    background: transparent;
+    padding: 10px; /* Optional padding */
+    border-radius: 5px; /* Rounded corners */
+    font-family: monospace; /* Use monospace font for terminal logs */
+    display: flex;
+    flex-direction: column; /* Ensure logs stack vertically */
+}
+
