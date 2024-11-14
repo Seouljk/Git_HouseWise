@@ -54,23 +54,23 @@ class Command(BaseCommand):
         cache = self.load_cache()
 
         # Scraping logic
-        # self.stdout.write(f"Scraping Citihardware links...")
-        # self.scrape_website_links(citihardware_links, sheet, cache, MATERIALS, self.scrape_citihardware)
+        self.stdout.write(f"Scraping Citihardware links...")
+        self.scrape_website_links(citihardware_links, sheet, cache, MATERIALS, self.scrape_citihardware)
 
         self.stdout.write(f"Scraping Pinastoolsph links...")
         self.scrape_website_links(pinastoolsph_links, sheet, cache, MATERIALS, self.scrape_pinastoolsph)
 
-        # self.stdout.write(f"Scraping Constph links...")
-        # self.scrape_website_links(constph_links, sheet, cache, MATERIALS, self.scrape_constph)
+        self.stdout.write(f"Scraping Constph links...")
+        self.scrape_website_links(constph_links, sheet, cache, MATERIALS, self.scrape_constph)
 
         # self.stdout.write(f"Scraping Constructph links...")
         # self.scrape_website_links(constructph_links, sheet, cache, MATERIALS, self.scrape_constructph)
 
-        # self.stdout.write(f"Scraping PinoyBuilders links...")
-        # self.scrape_website_links(pinoybuilders_links, sheet, cache, MATERIALS, self.scrape_pinoybuilders)
+        self.stdout.write(f"Scraping PinoyBuilders links...")
+        self.scrape_website_links(pinoybuilders_links, sheet, cache, MATERIALS, self.scrape_pinoybuilders)
 
-        # self.stdout.write(f"Scraping Philcon links...")
-        # self.scrape_website_links(philcon_links, sheet, cache, MATERIALS, self.scrape_philcon)
+        self.stdout.write(f"Scraping Philcon links...")
+        self.scrape_website_links(philcon_links, sheet, cache, MATERIALS, self.scrape_philcon)
         
         # Ensure date is recorded in Google Sheets, even if no data was added
         self.ensure_date_entry(sheet)
@@ -85,7 +85,7 @@ class Command(BaseCommand):
         
         for product, price in zip(products, prices):
             description_text = product.text.strip().lower()
-            for material_id, material_name in materials.items():
+            for material_id, material_names in materials.items():
                 material_name = material_names['material_name']
                 alt_name1 = material_names.get('alt_name1', '')
                 alt_name2 = material_names.get('alt_name2', '')
@@ -145,7 +145,7 @@ class Command(BaseCommand):
                     (alt_name2 and re.search(re.escape(alt_name2), description_text))
                 ):
                     try:
-                        price_text = price.text.strip()
+                        price = price.text.strip()
                         self.stdout.write(f'Scraped {material_name}: {price} from {url}')
                         self.update_google_sheet(sheet, material_id, material_name, price, url)
                         break  # Stop after the first match is found for the row
@@ -154,20 +154,32 @@ class Command(BaseCommand):
 
     def scrape_constructph(self, soup, url, sheet, materials):
         """Scrape Constructph for material prices."""
-        rows = soup.find_all('tr')
+        rows = soup.find_all('tr')  # Find all table rows
+
         for row in rows:
-            columns = row.find_all('td')
-            if columns and len(columns) == 5:
-                description_text = columns[0].text.strip().lower()
-                for material_id, material_name in materials.items():
-                    if re.search(re.escape(material_name), description_text):
-                        try:
-                            price = columns[4].text.strip()
-                            self.stdout.write(f'Scraped {material_name}: {price} from {url}')
-                            self.update_google_sheet(sheet, material_id, material_name, price, url)
-                            break  # Move to next row once a material is matched
-                        except Exception as e:
-                            self.stdout.write(f'Error scraping {material_name} from {url}: {str(e)}')
+            tds = row.find_all('td')  # Get all <td> elements in the row
+            if not tds:
+                continue  # Skip empty rows
+
+            description_text = tds[0].text.strip().lower()  # Use the first <td> as description
+
+            for material_id, material_names in materials.items():
+                material_name = material_names['material_name']
+                alt_name1 = material_names.get('alt_name1', '')
+                alt_name2 = material_names.get('alt_name2', '')
+
+                # Check for matching material name or alternate names
+                if (re.search(re.escape(material_name), description_text) or
+                    (alt_name1 and re.search(re.escape(alt_name1), description_text)) or
+                    (alt_name2 and re.search(re.escape(alt_name2), description_text))):
+                    
+                    try:
+                        price = tds[-1].text.strip()  # Get the last <td> for the price
+                        self.stdout.write(f'Scraped {material_name}: {price} from {url}')
+                        self.update_google_sheet(sheet, material_id, material_name, price, url)
+                        break  # Move to the next row once a material is matched
+                    except Exception as e:
+                        self.stdout.write(f'Error scraping {material_name} from {url}: {str(e)}')
 
     def scrape_pinoybuilders(self, soup, url, sheet, materials):
         """Scrape PinoyBuilders for material prices."""
@@ -176,13 +188,20 @@ class Command(BaseCommand):
             columns = row.find_all('td')
             if columns and len(columns) == 3:
                 description_text = columns[0].text.strip().lower()
-                for material_id, material_name in materials.items():
-                    if re.search(re.escape(material_name), description_text):
+                for material_id, material_names in materials.items():
+                    material_name = material_names['material_name']
+                    alt_name1 = material_names.get('alt_name1', '')
+                    alt_name2 = material_names.get('alt_name2', '')
+                    if (
+                        re.search(re.escape(material_name), description_text) or
+                        (alt_name1 and re.search(re.escape(alt_name1), description_text)) or
+                        (alt_name2 and re.search(re.escape(alt_name2), description_text))
+                    ):
                         try:
                             price = columns[2].text.strip()
                             self.stdout.write(f'Scraped {material_name}: {price} from {url}')
                             self.update_google_sheet(sheet, material_id, material_name, price, url)
-                            break  # Move to next row once a material is matched
+                            break  # Stop after the first match is found for the row
                         except Exception as e:
                             self.stdout.write(f'Error scraping {material_name} from {url}: {str(e)}')
 
@@ -194,14 +213,22 @@ class Command(BaseCommand):
             if material_description:
                 description_text = material_description.text.strip().lower()
 
-                for material_id, material_name in materials.items():
+                for material_id, material_names in materials.items():
+                    material_name = material_names['material_name']
+                    alt_name1 = material_names.get('alt_name1', '')
+                    alt_name2 = material_names.get('alt_name2', '')
+
                     # Match material name using regex for partial matching
-                    if re.search(re.escape(material_name), description_text):
+                    if  (
+                            re.search(re.escape(material_name), description_text) or
+                            (alt_name1 and re.search(re.escape(alt_name1), description_text)) or
+                            (alt_name2 and re.search(re.escape(alt_name2), description_text))
+                        ):
                         try:
                             price = row.find_all('td')[-1].text.strip()
                             self.stdout.write(f'Scraped {material_name}: {price} from {url}')
                             self.update_google_sheet(sheet, material_id, material_name, price, url)
-                            break  # Continue to next row once material is found
+                            break  # Stop after the first match is found for the row
                         except Exception as e:
                             self.stdout.write(f'Error scraping {material_name} from {url}: {str(e)}')
 
@@ -224,7 +251,7 @@ class Command(BaseCommand):
                 cache[link] = {'time': datetime.now(), 'content': response.content}
             except Exception as e:
                 self.stdout.write(f'Error scraping {link}: {str(e)}')
-            time.sleep(2)  # Delay between requests
+            time.sleep(10)  # Delay between requests
 
     def update_google_sheet(self, sheet, material_id, material_name, price, website):
         """Updates the Google Sheet with scraped data."""

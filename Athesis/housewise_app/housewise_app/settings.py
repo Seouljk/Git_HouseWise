@@ -28,7 +28,7 @@ SECRET_KEY = 'django-insecure-xaez2+pb*(yjc^)%iul7t&me&3hqj9d5t#e)a#bjb34h^ed$^5
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost','127.0.0.1', '192.168.1.3', '192.168.73.150']
+ALLOWED_HOSTS = ['localhost','127.0.0.1', '192.168.73.150','192.168.1.7']
 
 AUTH_USER_MODEL = 'housewise.UserHousewise'
 

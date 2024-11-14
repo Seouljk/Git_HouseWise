@@ -1,27 +1,28 @@
 from django.shortcuts import render, redirect,  get_object_or_404
-from django.contrib.auth import login, logout, authenticate
+from django.contrib.auth import login, logout
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
-from django.http import JsonResponse, StreamingHttpResponse
+from django.http import JsonResponse
 from django.views.decorators.cache import never_cache
 from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_GET
 import json
-import time
 #SCRIPTS
 
 #MOBILE APP PACKAGES 
 from rest_framework.response import Response
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
+
 
 from django.db.models import Q
 from .models import UserHousewise, LoginSession, UserType, Materials, MaterialPrice
 
-#MOBILE APP API
+#MOBILE APP API 
 @api_view(['POST'])
 def login_user(request):
     username_or_email = request.data.get('username_or_email')
@@ -47,17 +48,22 @@ def login_user(request):
             if user.user_type.user_type == 'user':  # Modify to check for user type
                 user.last_login = timezone.now()
                 user.save()
-
-                # Create a new login session
-                login_session = LoginSession.objects.create(user=user, login_time=user.last_login)
+                
+                # Generate JWT token
+                refresh = RefreshToken.for_user(user)
+                token = str(refresh.access_token)
 
                 # You might want to return session details or tokens here
                 return Response({
                     "message": "Login successful",
-                    "user_id": user.user_id,  # Correct access to the primary key
-                    "username": user.username,
-                    "email": user.email,
-                    "login_session_id": login_session.loginsession_id  # Include the session ID if needed
+                    "user": {
+                        "id": user.id,
+                        "name": user.name,
+                        "username": user.username,
+                        "email": user.email,
+                        "age": user.age,
+                    },
+                    "token": token  # return JWT token
                 }, status=status.HTTP_200_OK)
 
             return Response({"error": "You do not have permission to access this area."}, status=status.HTTP_403_FORBIDDEN)
@@ -67,8 +73,104 @@ def login_user(request):
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+@api_view(['PUT'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+def update_user(request):
+    try:
 
-    
+         # Log the request headers and user details for debugging
+        print(f"Request Headers: {request.headers}")
+        print(f"Request User: {request.user}")
+
+        user = request.user
+        data = request.data
+
+         # Ensure the user type is 'user'
+        if user.user_type.user_type != 'user':
+            return Response({"error": "You do not have permission to perform this action."}, status=status.HTTP_403_FORBIDDEN)
+
+
+        # Update fields
+        user.name = data.get('name', user.name)
+        user.username = data.get('username', user.username)
+        user.email = data.get('email', user.email)
+        user.age = data.get('age', user.age)
+
+        user.save()
+        return Response({"message": "User profile updated successfully."}, status=status.HTTP_200_OK)
+    except UserHousewise.DoesNotExist:
+        return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    except UserHousewise.DoesNotExist:
+        return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND) 
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+#WEBSITE API
+@login_required(login_url='/housewise/')
+@never_cache
+def profile_view(request, username):
+    user = get_object_or_404(UserHousewise, username=username)
+    # Clear all messages after logout to prevent old messages from showing up
+    storage = messages.get_messages(request)
+    storage.used = True  # Marks all messages as read
+    login_sessions = user.login_sessions.all().order_by('-login_time')
+
+    if request.method == 'POST':
+        # Update user fields if data is provided
+        name = request.POST.get('name')
+        username = request.POST.get('username')
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+        age = request.POST.get('age')
+
+        if name:  # Only update if a value is provided
+            user.name = name
+        if username:  # Only update if a value is provided
+            user.username = username
+        if email:  # Only update if a value is provided
+            user.email = email
+        if password:  # Only update if a password is provided
+            user.set_password(password)  # Update password securely
+        if age:  # Only update if a value is provided
+            user.age = age
+
+        user.save()  # Save the updated user profile
+        return redirect('profile_view', username=user.username)  # Redirect to the profile view after saving
+
+    return render(request, 'housewise/profile.html', {'user': user, 'login_sessions': login_sessions})
+
+@csrf_exempt  # To exempt CSRF token validation for simplicity (in production, use proper CSRF handling)
+def save_profile_changes(request, username):
+    if request.method == 'POST':
+        user = get_object_or_404(UserHousewise, username=username)
+        
+        data = json.loads(request.body)
+        name = data.get('name')
+        username = data.get('username')
+        email = data.get('email')
+        password = data.get('password')  # Capture password if provided
+        age = data.get('age')
+
+        if name:
+            user.name = name
+        if username:
+            user.username = username
+        if email:
+            user.email = email
+        if password:  # Make sure to hash the password before saving
+            user.set_password(password)  # Use set_password to hash
+        if age:
+            user.age = age
+
+        user.save()
+
+        return JsonResponse({'success': True})
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
 def login_view(request):
     if request.method == 'POST':  # Handle login
         username_or_email = request.POST.get('username_or_email')
@@ -145,9 +247,9 @@ def user_list(request, username):
     selected_user = None
     login_sessions = []
     
-    if 'selected_user_id' in request.GET:
-        selected_user_id = request.GET.get('selected_user_id')
-        selected_user = UserHousewise.objects.get(user_id=selected_user_id)
+    if 'selected_id' in request.GET:
+        selected_id = request.GET.get('selected_id')
+        selected_user = UserHousewise.objects.get(id=selected_id)
         login_sessions = selected_user.login_sessions.all().order_by('-login_time')  # Order by latest login time
 
     return render(request, 'housewise/user.html', {
@@ -160,9 +262,9 @@ def user_list(request, username):
 @never_cache
 def user_login_sessions(request):
     if request.method == 'GET':
-        user_id = request.GET.get('user_id')
+        id = request.GET.get('id')
         try:
-            user = UserHousewise.objects.get(user_id=user_id)
+            user = UserHousewise.objects.get(id=id)
             login_sessions = user.login_sessions.all().order_by('-login_time')
 
             sessions_data = []
@@ -228,66 +330,4 @@ def feedbacks_view(request, username):
 def script_view(request, username):
     return render(request, 'housewise/scripts.html', {'username': username})
     
-
-@login_required(login_url='/housewise/')
-@never_cache
-def profile_view(request, username):
-    user = get_object_or_404(UserHousewise, username=username)
-    # Clear all messages after logout to prevent old messages from showing up
-    storage = messages.get_messages(request)
-    storage.used = True  # Marks all messages as read
-    login_sessions = user.login_sessions.all().order_by('-login_time')
-
-    if request.method == 'POST':
-        # Update user fields if data is provided
-        name = request.POST.get('name')
-        username = request.POST.get('username')
-        email = request.POST.get('email')
-        password = request.POST.get('password')
-        age = request.POST.get('age')
-
-        if name:  # Only update if a value is provided
-            user.name = name
-        if username:  # Only update if a value is provided
-            user.username = username
-        if email:  # Only update if a value is provided
-            user.email = email
-        if password:  # Only update if a password is provided
-            user.set_password(password)  # Update password securely
-        if age:  # Only update if a value is provided
-            user.age = age
-
-        user.save()  # Save the updated user profile
-        return redirect('profile_view', username=user.username)  # Redirect to the profile view after saving
-
-    return render(request, 'housewise/profile.html', {'user': user, 'login_sessions': login_sessions})
-
-@csrf_exempt  # To exempt CSRF token validation for simplicity (in production, use proper CSRF handling)
-def save_profile_changes(request, username):
-    if request.method == 'POST':
-        user = get_object_or_404(UserHousewise, username=username)
-        
-        data = json.loads(request.body)
-        name = data.get('name')
-        username = data.get('username')
-        email = data.get('email')
-        password = data.get('password')  # Capture password if provided
-        age = data.get('age')
-
-        if name:
-            user.name = name
-        if username:
-            user.username = username
-        if email:
-            user.email = email
-        if password:  # Make sure to hash the password before saving
-            user.set_password(password)  # Use set_password to hash
-        if age:
-            user.age = age
-
-        user.save()
-
-        return JsonResponse({'success': True})
-    return JsonResponse({'success': False, 'error': 'Invalid request method'})
-
 

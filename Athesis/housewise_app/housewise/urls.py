@@ -22,7 +22,7 @@ urlpatterns = [
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('housewise/auth/login/', views.login_user, name='login_user'),
-
+    path('housewise/update_user/', views.update_user, name='update_user'),
 
 #SCRIPT:
     path("housewise/<str:username>/scripts/", views.script_view, name="scripts"),

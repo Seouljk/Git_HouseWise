@@ -1,27 +1,34 @@
-import React from 'react';
-import { StyleSheet, Text, View, Image, TouchableOpacity } from 'react-native';
-import { useNavigation } from '@react-navigation/native'; 
+import React, { useState } from 'react';
+import { StyleSheet, Text, View, Image, TouchableOpacity, TextInput } from 'react-native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 
 export default function App() {
   const navigation = useNavigation();
-  const handlePressConcrete = () => {
-    alert('wapa nahuman');
-  };
+  const [buildTitle, setBuildTitle] = useState("You want your house?");
+  const route = useRoute();
+  const [houseType, setHouseType] = useState(null); // New state for houseType
 
-  const handlePressWooden = () => {
-    alert('Wooden icon clicked!');
+  const handleNavigate = (type) => {
+    setHouseType(type); // Set houseType state
+    navigation.navigate('HouseDimension', { houseType: type, buildTitle }); // Pass houseType to the next screen
   };
 
   return (
     <View style={styles.container}>
-      {/* Wrap the two icons in a row */}
+      {/* Editable build title */}
+      <TextInput
+        style={styles.optionBuild}
+        value={buildTitle}
+        onChangeText={setBuildTitle}
+      />
+
       <View style={styles.row}>
-        <TouchableOpacity style={styles.iconContainer} onPress={() => navigation.navigate('ConcreteScreen')}>
+        <TouchableOpacity style={styles.iconContainer} onPress={() => handleNavigate('Concrete')}>
           <Image source={require('../assets/concreteicon.png')} style={styles.icon} />
           <Text style={styles.iconText}>Concrete</Text>
         </TouchableOpacity>
         
-        <TouchableOpacity style={styles.iconContainer} onPress={() => navigation.navigate('WoodenScreen')}>
+        <TouchableOpacity style={styles.iconContainer} onPress={() => handleNavigate('Wooden')}>
           <Image source={require('../assets/woodenicon.png')} style={styles.icon} />
           <Text style={styles.iconText}>Wooden</Text>
         </TouchableOpacity>
@@ -33,33 +40,48 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FCC205', // Yellow background
+    backgroundColor: '#FCC205',
     justifyContent: 'center',
     alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  optionBuild: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#353336',
+    marginBottom: 15,
+    textAlign: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#353336',
+    paddingVertical: 5,
   },
   row: {
-    flexDirection: 'row', // Puts the two icons in a row
-    justifyContent: 'space-between', // Space between the two icons
+    flexDirection: 'row',
+    justifyContent: 'space-around',
     alignItems: 'center',
+    width: '100%',
   },
   iconContainer: {
     backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
-    marginHorizontal: 20, // Adds space between the two icons
-    elevation: 5, // Shadow for Android
+    padding: 15,
+    elevation: 5,
     borderRadius: 15,
-    borderColor:'#FCC205',
-    borderWidth: 3
+    borderColor: '#353336',
+    borderWidth: 3,
+    width: 120,
+    marginHorizontal: 10,
   },
   icon: {
-    width: 100, // Adjust the width and height as per your icon's aspect ratio
-    height: 100,
+    width: 80,
+    height: 80,
     resizeMode: 'contain',
   },
   iconText: {
-    marginTop: 1,
-    fontSize: 18,
+    marginTop: 10,
+    fontSize: 16,
     fontWeight: 'bold',
+    color: '#353336',
   },
 });
