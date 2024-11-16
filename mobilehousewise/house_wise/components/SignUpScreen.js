@@ -22,8 +22,18 @@ export default function SignUpScreen({ navigation }) {
     if (response?.type === 'success') {
       const { authentication } = response;
       // Handle the authentication and get the user info
+      console.log(authentication);
+      // Navigate to another screen or perform any action after successful sign-up
+      navigation.navigate('Home'); // Navigate to Home or any other screen after sign-up
     }
   }, [response]);
+
+  const handleSignUp = () => {
+    // Perform sign-up logic here
+    console.log('Sign up with:', { name, email, password });
+    // For now, just navigate to the Login screen
+    navigation.navigate('Login');
+  };
 
   return (
     <View style={styles.container}>
@@ -33,18 +43,45 @@ export default function SignUpScreen({ navigation }) {
       </View>
 
       {/* Sign Up Form */}
-      <View style ={styles.formContainer}>
-        <TextInput style={styles.input} placeholder="Username" value={name} onChangeText={setName}/>
+      <View style={styles.formContainer}>
+        {/* Username Input */}
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.input}
+            placeholder="Username"
+            value={name}
+            onChangeText={setName}
+          />
+          <FontAwesome name="user" size={20} color="#000" style={styles.icon} />
+        </View>
 
-        <TextInput style={styles.input} placeholder="Email" keyboardType="email-address" value={email} 
-            onChangeText={setEmail}/>
+        {/* Email Input */}
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
+            keyboardType="email-address"
+            value={email}
+            onChangeText={setEmail}
+          />
+          <FontAwesome name="envelope" size={20} color="#000" style={styles.icon} />
+        </View>
 
-        <TextInput style={styles.input} placeholder="Create Password" secureTextEntry value={password}
-            onChangeText={setPassword}/>
+        {/* Password Input */}
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.input}
+            placeholder="Create Password"
+            secureTextEntry
+            value={password}
+            onChangeText={setPassword}
+          />
+          <FontAwesome name="lock" size={20} color="#000" style={styles.icon} />
+        </View>
 
         {/* Sign Up Button */}
-        <TouchableOpacity style={styles.button}>
-          <Text style= {styles.buttonText}>Sign Up</Text>
+        <TouchableOpacity style={styles.button} onPress={handleSignUp}>
+          <Text style={styles.buttonText}>Sign Up</Text>
         </TouchableOpacity>
 
         {/* Terms & Privacy Policy */}
@@ -53,27 +90,26 @@ export default function SignUpScreen({ navigation }) {
           <Text style={styles.linkText}>Terms & Privacy Policy</Text>
         </Text>
 
-      {/* Social Login Buttons */}
-      <View style={styles.socialContainer}>
-        <TouchableOpacity disabled={!request} onPress={() => promptAsync()}>
-          <FontAwesome name="google" size={32} color="#DB4437" />
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <FontAwesome name="facebook" size={32} color="#3b5998" />
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <FontAwesome name="twitter" size={32} color="#1DA1F2" />
-        </TouchableOpacity>
-      </View>
+        {/* Social Login Buttons */}
+        <View style={styles.socialContainer}>
+          <TouchableOpacity disabled={!request} onPress={() => promptAsync()}>
+            <FontAwesome name="google" size={32} color="#DB4437" />
+          </TouchableOpacity>
+          <TouchableOpacity>
+            <FontAwesome name="facebook" size={32} color="#3b5998" />
+          </TouchableOpacity>
+          <TouchableOpacity>
+            <FontAwesome name="twitter" size={32} color="#1DA1F2" />
+          </TouchableOpacity>
+        </View>
 
-      {/* Already have an account */}
-      <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-        <Text style={styles.loginText}>
-          Already have an account? <Text style={styles.linkText}>Login</Text>
-        </Text>
-      </TouchableOpacity>
+        {/* Already have an account */}
+        <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+          <Text style={styles.loginText}>
+            Already have an account? <Text style={styles.linkText}>Login</Text>
+          </Text>
+        </TouchableOpacity>
       </View>
-      
     </View>
   );
 }
@@ -81,7 +117,7 @@ export default function SignUpScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#FCC205',
     justifyContent: 'center',
   },
 
@@ -90,37 +126,44 @@ const styles = StyleSheet.create({
     height: '70%',
     backgroundColor: '#FCC205',
     padding: 30,
-    borderRadius: 40,
-    marginTop:20
-
+    borderRadius: 30,
+    marginTop: 5,
   },
 
   logoContainer: {
     alignItems: 'center',
     marginBottom: 10,
-    alignItems:'center',
-    marginTop: 40
-
+    marginTop: 150,
   },
+
   logo: {
-    width: 200, // Adjust the width and height as per your icon's aspect ratio
+    width: 200,
     height: 200,
     resizeMode: 'contain',
   },
 
-  input: {
-    height: 50,
-    backgroundColor: '#FCC205',
-    borderRadius: 10,
-    paddingHorizontal: 15,
-    marginBottom: 10,
-    borderBottomColor: '#000',
-    borderBottomEndRadius: 10,
-    borderBottomLeftRadius: 10,
-    borderLeftColor: '#FCC205',
-    borderBottomWidth: 2,
-    color: '#000',
+  icon: {
+    marginLeft: 10, // Space between input and icon
   },
+
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#353336',
+    borderRadius: 10,
+    marginTop: 20,
+    backgroundColor: '#FCC205',
+    paddingHorizontal: 10,
+  },
+  
+  input: {
+    flex: 1,
+    height: 45,
+    color: '#000', // Changed to black for better visibility
+    padding: 10,
+  },
+
   button: {
     backgroundColor: '#353336',
     borderRadius: 10,
@@ -133,27 +176,32 @@ const styles = StyleSheet.create({
     borderColor: '#FCC205',
     borderWidth: 1,
     elevation: 10,
-    marginTop: 20
+    marginTop: 20,
   },
+
   buttonText: {
     color: '#FCC205',
     fontSize: 16,
     fontWeight: 'bold',
   },
+
   termsText: {
     textAlign: 'center',
     marginBottom: 20,
     marginTop: 20,
     color: '#000',
   },
+
   linkText: {
     fontWeight: 'bold',
   },
+
   socialContainer: {
     flexDirection: 'row',
     justifyContent: 'space-evenly',
     marginBottom: 30,
   },
+
   loginText: {
     textAlign: 'center',
     color: '#000',

@@ -14,3 +14,4 @@ npm install react-native-gesture-handler react-native-reanimated
 
 # Masked View (optional, but recommended)
 npm install @react-native-community/masked-view
+"# housewise" 

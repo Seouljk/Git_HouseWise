@@ -19,8 +19,8 @@
             </button>       
         </div>        
         <div class="logout">
-            <button class="dropdown-btn">
-                <span> AdminKyle </span> <!-- Text for the dropdown button -->
+            <button class="dropdown-btn" data-username="{{ username }}">
+                <span> {{ request.user.username }} </span> <!-- Text for the dropdown button -->
                 <i class="fas fa-chevron-down"></i> <!-- Dropdown arrow icon -->
             </button>
             <div class="dropdown-content">
@@ -31,7 +31,7 @@
                     <i class="fas fa-sign-out-alt"></i> Logout
                 </a>
             </div>
-        </div>        
+        </div>     
     </div>
     
     <div class="script-dashboard">
@@ -41,16 +41,35 @@
                 <span id="status-text">Online</span> <!-- Text to display "Online" or "Offline" -->
                 <label class="status-indicator" id="status-indicator">●</label> <!-- Status indicator -->
             </div>
-            
+            <div class="crawler-status">
+                <div id="crawler-status-message" class="crawler-status-message">
+                    Crawler is off <!-- Default text -->
+                </div>
+            </div>
             <label class="switch">
-                <input type="checkbox" id="status-toggle" checked>
+                <input type="checkbox" id="status-toggle" unchecked>
                 <span class="slider round"></span>
             </label>
+        </div>
+        <div class="timer">
+            <div class="countdown-title">
+                <span>Countdown until Next Data Crawling Session</span> <!-- New text added here -->
+            </div>
+            <div class="countdown"> 
+                <span id="hours">00</span>:<span id="minutes">00</span>:<span id="seconds">00</span>
+            </div>
+            <div class="countdown-label">
+                <span id="hrs">hr/s</span>:<span id="mins">min/s</span>:<span id="secs">sec/s</span>
+            </div>
         </div>
         <hr class="separator-line">
         
         <div class="bottom-section">
-            <!-- Blank space that extends to the bottom part of the screen -->
+            <div class="script-log">
+                <div class="log-container" id="logContainer">
+                    <!-- Logs will be dynamically inserted here --> 
+                </div>
+            </div>
         </div>
     </div>
     
@@ -58,31 +77,7 @@
 
 
 <script>
-    document.getElementById('status-toggle').addEventListener('change', function() {
-    const statusText = document.getElementById('status-text');
-    if (this.checked) {
-        statusText.textContent = 'Online';
-    } else {
-        statusText.textContent = 'Offline';
-    }
-});
 
-document.getElementById('status-toggle').addEventListener('change', function() {
-    const statusText = document.getElementById('status-text');
-    const statusIndicator = document.getElementById('status-indicator');
-    
-    if (this.checked) {
-        statusText.textContent = 'Online';
-        statusIndicator.textContent = '●'; // Indicator symbol
-        statusIndicator.classList.remove('offline');
-        statusIndicator.classList.add('online');
-    } else {
-        statusText.textContent = 'Offline';
-        statusIndicator.textContent = '●'; // Indicator symbol
-        statusIndicator.classList.remove('online');
-        statusIndicator.classList.add('offline');
-    }
-});
 
 document.querySelector('.dropdown-btn').addEventListener('click', function() {
     document.querySelector('.logout').classList.toggle('active');

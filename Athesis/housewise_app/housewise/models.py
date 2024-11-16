@@ -36,7 +36,7 @@ class UserHousewiseManager(BaseUserManager):
     
 
 class UserHousewise(AbstractBaseUser, PermissionsMixin):
-    user_id = models.AutoField(primary_key=True)
+    id = models.AutoField(primary_key=True)
     username = models.CharField(max_length=100, unique=True)
     email = models.EmailField(unique=True)
     name = models.CharField(max_length=100)
@@ -136,7 +136,7 @@ class Roof(models.Model):
         choices=[('metal_trusses', 'Metal Trusses'), ('wooden_trusses', 'Wooden Trusses')],
         blank=True,  # Trusses will depend on roof_type choice
     )
-    house_type = models.ForeignKey(HouseType, on_delete=models.CASCADE, related_name="roofs")
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="roofs")
 
     def save(self, *args, **kwargs):
         # Automatically set trusses based on roof_type
@@ -152,7 +152,7 @@ class Rooms(models.Model):
     room_id = models.AutoField(primary_key=True)
     room_length = models.DecimalField(max_digits=5, decimal_places=2)  # Meters with decimals
     room_width = models.DecimalField(max_digits=5, decimal_places=2)   # Meters with decimals
-    house_type = models.ForeignKey(HouseType, on_delete=models.CASCADE, related_name="rooms")
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="rooms")
 
     def __str__(self):
         return f"Room {self.room_id} - {self.room_length}m x {self.room_width}m"
@@ -162,7 +162,7 @@ class CR(models.Model):
     cr_id = models.AutoField(primary_key=True)
     cr_length = models.DecimalField(max_digits=5, decimal_places=2)  # Meters with decimals
     cr_width = models.DecimalField(max_digits=5, decimal_places=2)   # Meters with decimals
-    house_type = models.ForeignKey(HouseType, on_delete=models.CASCADE, related_name="crs", null=True, blank=True)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="crs", null=True, blank=True)
 
     def __str__(self):
         return f"CR {self.cr_id} - {self.cr_length}m x {self.cr_width}m"
@@ -171,7 +171,7 @@ class CR(models.Model):
 class Materials(models.Model):
     materials_id = models.AutoField(primary_key=True)
     materials_name = models.CharField(max_length=100)  # Accepts letters and numbers
-    house_type = models.ManyToManyField(HouseType, related_name="materials")
+    project = models.ManyToManyField(Project, related_name="materials", blank=True)
 
     def __str__(self):
         return f"Material: {self.materials_name}"

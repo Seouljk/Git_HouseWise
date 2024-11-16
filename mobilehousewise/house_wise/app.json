@@ -7,28 +7,32 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "jsEngine": "hermes",
-
-    "expo": {
-        "scheme": "house_wise"
-      },
-    
-    
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
+    "scheme": "house_wise",
+    "plugins": [
+      "expo-font"
+      
+    ],
+    "newArchEnabled": true
+  },
+  "splash": {
+    "image": "./assets/splash.png",
+    "resizeMode": "contain",
+    "backgroundColor": "#ffffff"
+  },
+  "platforms": [
+    "ios",
+    "android"
+  ],
+  "ios": {
+    "supportsTablet": true
+  },
+  "android": {
+    "adaptiveIcon": {
+      "foregroundImage": "./assets/adaptive-icon.png",
       "backgroundColor": "#ffffff"
-    },
-    "ios": {
-      "supportsTablet": true
-    },
-    "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      }
-    },
-    "web": {
-      "favicon": "./assets/favicon.png"
     }
+  },
+  "web": {
+    "favicon": "./assets/favicon.png"
   }
 }

@@ -40,62 +40,63 @@
             </div>
             <!-- Materials List -->
             <ul class="material-list">
-                <li class="material-item" data-material-id="1">
-                    <div class="material-row">
-                        <p>Material 1</p>
-                        <p class="price">$10</p>
-                    </div>
-                </li>
-                <li class="material-item" data-material-id="2">
-                    <div class="material-row">
-                        <p>Material 2</p>
-                        <p class="price">$15</p>
-                    </div>
-                </li>
-                <li class="material-item" data-material-id="3">
-                    <div class="material-row">
-                        <p>Material 3</p>
-                        <p class="price">$20</p>
-                    </div>
-                </li>
-                <!-- Add more materials as needed -->
+                {% if materials_with_latest_price %}
+                    {% for material in materials_with_latest_price %}
+                        <li class="material-item">
+                            <button class="material-button" data-material-id="{{ material.id }}">
+                                {{ material.name }} - Php {{ material.latest_price }}
+                            </button>
+                        </li>
+                    {% endfor %}
+                {% else %}
+                    <li>No Materials found.</li>
+                {% endif %}
             </ul>
         </div>
 
         <!-- Material Info Column -->
         <div class="material-info" id="material-info">
             <h3>Material Details</h3>
-            
-            <div class="material-list">
-                <div class="material-row">
-                    <p class="date"><strong>Date:</strong> <span id="material-date-1">2024-09-01</span></p>
-                    <p class="price"><strong>Price:</strong> <span id="material-price-1">$100</span></p>
-                </div>
-                <div class="material-row">
-                    <p class="date"><strong>Date:</strong> <span id="material-date-2">2024-09-02</span></p>
-                    <p class="price"><strong>Price:</strong> <span id="material-price-2">$150</span></p>
-                </div>
-                <div class="material-row">
-                    <p class="date"><strong>Date:</strong> <span id="material-date-3">2024-09-03</span></p>
-                    <p class="price"><strong>Price:</strong> <span id="material-price-3">$200</span></p>
-                </div>
-                <div class="material-row">
-                    <p class="date"><strong>Date:</strong> <span id="material-date-4">2024-09-04</span></p>
-                    <p class="price"><strong>Price:</strong> <span id="material-price-4">$250</span></p>
-                </div>
-                <div class="material-row">
-                    <p class="date"><strong>Date:</strong> <span id="material-date-5">2024-09-05</span></p>
-                    <p class="price"><strong>Price:</strong> <span id="material-price-5">$300</span></p>
-                </div>
+            <div class="material-list scrollable">  <!-- Make scrollable -->
+                <!-- Placeholder for dynamic material rows -->
+                <div id="material-details-container"></div>
             </div>
         </div>
+        
         
         
     </div>
 </div>
 
 <script>
+     // Handle click event on material buttons
+     document.querySelectorAll('.material-button').forEach(button => {
+        button.addEventListener('click', function() {
+            const materialId = this.getAttribute('data-material-id');
+            fetch(`/housewise/get_material_prices/?material_id=${materialId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.prices) {
+                        const container = document.getElementById('material-details-container');
+                        container.innerHTML = '';  // Clear previous content
+                        
+                        data.prices.forEach((price, index) => {
+                            const materialRow = `
+                                <div class="material-row">
+                                    <p class="date"><strong>Date and Time:</strong> ${price.date_time}</p>
+                                    <p class="price"><strong>Price:</strong> Php ${price.amount}</p>
+                                </div>
+                            `;
+                            container.insertAdjacentHTML('beforeend', materialRow);
+                        });
+                    }
+                })
+                .catch(error => console.error('Error fetching material prices:', error));
+        });
+    });
+
+    // Toggle the dropdown for the user menu
     document.querySelector('.dropdown-btn').addEventListener('click', function() {
-        document.querySelector('.logout').classList.toggle('active');
+        document.querySelector('.dropdown-content').classList.toggle('active');
     });
 </script>
