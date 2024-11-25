@@ -1,18 +1,37 @@
-# Ignore the virtual environment
+# Virtual environment
 venv/
-# or if your virtual environment is named something else
-# myenv/
+.env
 
-# Ignore the credentials file
-secure-stone-412401-bef03f4658ac.json
-
-# Ignore other Python cache files and compiled files
+# Compiled files and caches
 __pycache__/
 *.py[cod]
 *.pyo
+*.pyd
 
-# Ignore database files (if applicable)
+# Ignore IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.sublime-project
+*.sublime-workspace
+
+# Logs and debug files
+*.log
+logs/
+
+# Local database files
 *.sqlite3
 
-# Ignore environment variable files
-.env
+# Django static and media files (optional if generated dynamically)
+staticfiles/
+media/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Credentials or sensitive files
+secure-stone-412401-bef03f4658ac.json
+
+# Railway deployment config (if any custom file is added)
+railway.json
