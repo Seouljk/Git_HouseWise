@@ -11,7 +11,13 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
-import os
+import dj_database_url
+from environ import Env
+env = Env()
+Env.read_env()
+ENVIRONMENT = env('ENVIRONMENT', default='production')
+
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -23,13 +29,20 @@ GOOGLE_SHEETS_CREDENTIALS = BASE_DIR.parent / 'resources/secure-stone-412401-bef
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-xaez2+pb*(yjc^)%iul7t&me&3hqj9d5t#e)a#bjb34h^ed$^5'
+SECRET_KEY = env('SECRET_KEY')
+
+# ENCRYPT_KEY = env('ENCRYPT_KEY')
 
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+if ENVIRONMENT == 'development':
+    DEBUG = True
+else: 
+    DEBUG = False
 
 ALLOWED_HOSTS = ['localhost','housewise-admin.up.railway.app' ,'192.168.1.3',]
+
+CSRF_TRUSTED_ORIGINS = ['https://housewise-admin.up.railway.app' ]
 
 AUTH_USER_MODEL = 'housewise.UserHousewise'
 
@@ -49,6 +62,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'housewise.apps.HousewiseConfig',
+    'admin_honeypot',
 
      # mobile apps
     'rest_framework',
@@ -117,13 +131,17 @@ WSGI_APPLICATION = 'housewise_app.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('housewise_db'),
-        'USER': os.environ.get('admin_user'),
-        'PASSWORD': os.environ.get('housewise123'),
-        'HOST': os.environ.get('localhost'),
-        'PORT': os.environ.get('5432'),
+        'NAME': 'housewise_db',
+        'USER': 'admin_user',
+        'PASSWORD': 'housewise123',
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
+
+POSTGRESS_LOCALLY = True
+if ENVIRONMENT == 'production' or POSTGRESS_LOCALLY == True:
+    DATABASES['default'] = dj_database_url.parse(env('DATABASE_URL'))
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
