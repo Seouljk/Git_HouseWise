@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -28,7 +29,7 @@ SECRET_KEY = 'django-insecure-xaez2+pb*(yjc^)%iul7t&me&3hqj9d5t#e)a#bjb34h^ed$^5
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost','127.0.0.1','192.168.1.7', '192.168.1.3', '172.20.8.187',]
+ALLOWED_HOSTS = ['localhost','housewise-admin.up.railway.app' ,'192.168.1.3',]
 
 AUTH_USER_MODEL = 'housewise.UserHousewise'
 
@@ -116,11 +117,11 @@ WSGI_APPLICATION = 'housewise_app.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'housewise_db',
-        'USER': 'admin_user',
-        'PASSWORD': 'housewise123',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'NAME': os.environ.get('housewise_db'),
+        'USER': os.environ.get('admin_user'),
+        'PASSWORD': os.environ.get('housewise123'),
+        'HOST': os.environ.get('localhost'),
+        'PORT': os.environ.get('5432'),
     }
 }
 
