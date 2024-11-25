@@ -1,1 +1,1 @@
-web: gunicorn housewise_app.wsgi:application
+web: gunicorn housewise_app.wsgi
