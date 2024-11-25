@@ -23,8 +23,6 @@ logs/
 *.sqlite3
 
 # Django static and media files (optional if generated dynamically)
-staticfiles/
-media/
 
 # OS-specific files
 .DS_Store
