@@ -40,10 +40,11 @@ class UserHousewise(AbstractBaseUser, PermissionsMixin):
     username = models.CharField(max_length=100, unique=True)
     email = models.EmailField(unique=True)
     name = models.CharField(max_length=100)
-    age = models.PositiveIntegerField()
+    age = models.PositiveIntegerField(null=True, blank=True)
     user_type = models.ForeignKey(UserType, on_delete=models.CASCADE, related_name="user")
     last_login = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    is_staff = models.BooleanField(default=False)  # Change to a regular field
 
     objects = UserHousewiseManager()
 
@@ -51,8 +52,8 @@ class UserHousewise(AbstractBaseUser, PermissionsMixin):
     REQUIRED_FIELDS = ['email']  # Add any other fields that are required
 
     def save(self, *args, **kwargs):
-        # Only hash password on creation
-        if not self.pk and self.password:
+        # Hash the password if it's being set or updated
+        if self.pk is None or not UserHousewise.objects.filter(pk=self.pk, password=self.password).exists():
             self.password = make_password(self.password)
         super(UserHousewise, self).save(*args, **kwargs)
 
@@ -61,11 +62,6 @@ class UserHousewise(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.username
-    
-    @property
-    def is_staff(self):
-        # Determine if user has admin privileges based on their user_type
-        return self.user_type.user_type.lower() == 'admin' and self.user_type.status
 
     @property
     def is_active(self):
