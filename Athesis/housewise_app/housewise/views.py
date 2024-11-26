@@ -175,6 +175,9 @@ def login_view(request):
     if request.method == 'POST':  # Handle login
         username_or_email = request.POST.get('username_or_email')
         password = request.POST.get('password')
+
+        print(f"Received username_or_email: {username_or_email}")
+        print(f"Received password: {password}")
         
         try:
             user = UserHousewise.objects.get(username=username_or_email)

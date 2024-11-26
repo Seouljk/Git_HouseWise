@@ -1,7 +1,7 @@
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
 from django.utils import timezone
-from django.contrib.auth.hashers import make_password, check_password
+from django.contrib.auth.hashers import make_password, check_password, is_password_usable
 from django.contrib import admin
 
 class UserType(models.Model):
@@ -26,11 +26,21 @@ class UserHousewiseManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, username, email, password=None, **extra_fields):
+    def create_superuser(self, username, email=None, password=None, **extra_fields):
+        extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
-        extra_fields.setdefault('is_staff', True)  # Ensure staff status is set
-        admin_type = UserType.objects.get(user_type='admin')
-        extra_fields['user_type'] = admin_type
+
+        if extra_fields.get('is_staff') is not True:
+            raise ValueError('Superuser must have is_staff=True.')
+        if extra_fields.get('is_superuser') is not True:
+            raise ValueError('Superuser must have is_superuser=True.')
+
+         # Ensure a user type is set (assuming Admin is represented by 'admin')
+        if 'user_type' not in extra_fields:
+            admin_usertype = UserType.objects.filter(user_type='admin').first()
+            if not admin_usertype:
+                raise ValueError("Admin user type must exist in UserType table.")
+            extra_fields['user_type'] = admin_usertype  # Use the UserType instance, not usertype_id
 
         return self.create_user(username, email, password, **extra_fields)
     
@@ -45,6 +55,7 @@ class UserHousewise(AbstractBaseUser, PermissionsMixin):
     last_login = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     is_staff = models.BooleanField(default=False)  # Change to a regular field
+    is_active = models.BooleanField(default=True)
 
     objects = UserHousewiseManager()
 
@@ -52,21 +63,18 @@ class UserHousewise(AbstractBaseUser, PermissionsMixin):
     REQUIRED_FIELDS = ['email']  # Add any other fields that are required
 
     def save(self, *args, **kwargs):
-        # Hash the password if it's being set or updated
-        if self.pk is None or not UserHousewise.objects.filter(pk=self.pk, password=self.password).exists():
+        # Only hash the password if it's not usable (i.e., not already hashed)
+        if not is_password_usable(self.password):
             self.password = make_password(self.password)
         super(UserHousewise, self).save(*args, **kwargs)
 
-    def check_password(self, raw_password):
-        return check_password(raw_password, self.password)
+    def check_password(self, password):
+        return check_password(password, self.password)
 
     def __str__(self):
         return self.username
 
-    @property
-    def is_active(self):
-        # Determine if the user is active based on the status in UserType
-        return self.user_type.status
+
     
 
 class LoginSession(models.Model):
