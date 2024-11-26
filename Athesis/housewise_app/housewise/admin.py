@@ -1,5 +1,5 @@
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.contrib.auth.hashers import make_password
 
 from .models import UserHousewise
 from .models import UserType
@@ -19,6 +19,12 @@ class UserHousewiseAdmin(admin.ModelAdmin):
     # Overriding log_change to prevent logging admin changes
     def log_change(self, request, obj, message):
         pass  # This will prevent admin log entries for changes
+
+    def save_model(self, request, obj, form, change):
+        # Hash the password if it was changed
+        if 'password' in form.changed_data:
+            obj.password = make_password(obj.password)
+        super().save_model(request, obj, form, change)
 
 admin.site.register(UserHousewise, UserHousewiseAdmin)
 admin.site.register(UserType)
