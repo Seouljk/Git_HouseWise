@@ -42,7 +42,7 @@ else:
 
 ALLOWED_HOSTS = ['localhost','housewise-admin.up.railway.app' ,'192.168.1.3',]
 
-CSRF_TRUSTED_ORIGINS = ['https://housewise-admin.up.railway.app/housewise' ]
+CSRF_TRUSTED_ORIGINS = ['https://housewise-admin.up.railway.app/' ]
 
 AUTH_USER_MODEL = 'housewise.UserHousewise'
 
