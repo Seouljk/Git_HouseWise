@@ -42,7 +42,7 @@ else:
 
 ALLOWED_HOSTS = ['localhost','housewise-admin.up.railway.app' ,'192.168.1.3',]
 
-CSRF_TRUSTED_ORIGINS = ['https://housewise-admin.up.railway.app' ]
+CSRF_TRUSTED_ORIGINS = ['https://housewise-admin.up.railway.app']
 
 AUTH_USER_MODEL = 'housewise.UserHousewise'
 
@@ -77,6 +77,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -84,7 +85,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.cache.UpdateCacheMiddleware',
     'django.middleware.cache.FetchFromCacheMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
+
 
     #CORS
     'corsheaders.middleware.CorsMiddleware',
@@ -144,7 +145,7 @@ DATABASES = {
 
 POSTGRESS_LOCALLY = True
 if ENVIRONMENT == 'production' or POSTGRESS_LOCALLY == True:
-    DATABASES['default'] = dj_database_url.parse(env('DATABASE_URL'))
+    DATABASES['default'] = dj_database_url.parse(env('DATABASE_URL'), ssl_require=True)
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
