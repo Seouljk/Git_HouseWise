@@ -7,6 +7,7 @@ from django.http import JsonResponse
 from django.views.decorators.cache import never_cache
 from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.hashers import check_password, make_password
 import json
 #SCRIPTS
 
@@ -48,6 +49,8 @@ def login_user(request):
             if user.user_type.user_type == 'user':  # Modify to check for user type
                 user.last_login = timezone.now()
                 user.save()
+                login_session = LoginSession.objects.create(user=user, login_time=user.last_login)
+                request.session['login_session_id'] = login_session.loginsession_id  # Store session ID in session
                 
                 # Generate JWT token
                 refresh = RefreshToken.for_user(user)
@@ -78,7 +81,6 @@ def login_user(request):
 @permission_classes([IsAuthenticated])
 def update_user(request):
     try:
-
          # Log the request headers and user details for debugging
         print(f"Request Headers: {request.headers}")
         print(f"Request User: {request.user}")
@@ -97,17 +99,62 @@ def update_user(request):
         user.email = data.get('email', user.email)
         user.age = data.get('age', user.age)
 
+         # Handle password change
+        current_password = data.get('current_password')
+        new_password = data.get('new_password')
+        confirm_password = data.get('confirm_password')
+
+        if current_password and new_password and confirm_password:
+            if not check_password(current_password, user.password):
+                return Response({"error": "Current password does not match."}, status=status.HTTP_400_BAD_REQUEST)
+
+            if new_password != confirm_password:
+                return Response({"error": "New password and confirm password do not match."}, status=status.HTTP_400_BAD_REQUEST)
+
+            user.password = make_password(new_password)
+
         user.save()
         return Response({"message": "User profile updated successfully."}, status=status.HTTP_200_OK)
+
     except UserHousewise.DoesNotExist:
         return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-    except UserHousewise.DoesNotExist:
-        return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND) 
+
+@api_view(['POST'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+def logout_user(request):
+    try:
+
+        print(f"User: {request.user}")  # Check if user is authenticated
+        print(f"Session Data: {request.session.items()}")  # Check all session data
+        
+        # Get the current user's login session ID
+        login_session_id = request.session.get('login_session_id')
+        if login_session_id:
+            # Get the LoginSession object and update logout details
+            login_session = LoginSession.objects.get(loginsession_id=login_session_id)
+            login_session.logout_time = timezone.now()
+            login_session.login_duration = login_session.logout_time - login_session.login_time
+            login_session.save()
+
+            # Clear the session and log out the user
+            logout(request)
+            request.session.flush()  # Clear all session data
+
+            # Send a response confirming successful logout
+            return Response({'message': 'Logged out successfully'}, status=status.HTTP_200_OK)
+
+        else:
+            return Response({'error': 'No active session found'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    except LoginSession.DoesNotExist:
+        return Response({'error': 'Login session not found'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
-        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 #WEBSITE API
 @login_required(login_url='/housewise/')
