@@ -11,6 +11,14 @@ from django.contrib.auth.hashers import check_password, make_password
 import json
 #SCRIPTS
 
+#MAIL IMPORTS 
+from django.core.mail import send_mail, EmailMultiAlternatives
+from django.contrib.sessions.models import Session
+from datetime import datetime, timedelta
+import random
+from django.utils.decorators import method_decorator
+
+
 #MOBILE APP PACKAGES 
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
@@ -22,6 +30,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from django.db.models import Q
 from .models import UserHousewise, LoginSession, UserType, Materials, MaterialPrice
+from .serializers import UserHousewiseSerializer
 
 #MOBILE APP API 
 @api_view(['POST'])
@@ -121,6 +130,91 @@ def update_user(request):
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+@csrf_exempt
+def check_email(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            email = data.get('email', '')
+
+            # Check if the email exists in the database
+            if UserHousewise.objects.filter(email=email).exists():
+                return JsonResponse({'success': False, 'message': 'Email is already in use'}, status=400)
+            else:
+                return JsonResponse({'success': True, 'message': 'Email is available'})
+        except json.JSONDecodeError:
+            return JsonResponse({'success': False, 'message': 'Invalid JSON'}, status=400)
+    return JsonResponse({'success': False, 'message': 'Invalid request method'}, status=405)
+
+@csrf_exempt
+def check_username(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            username = data.get('username', '')
+
+            # Check if the email exists in the database
+            if UserHousewise.objects.filter(username=username).exists():
+                return JsonResponse({'success': False, 'message': 'username is already in use'}, status=400)
+            else:
+                return JsonResponse({'success': True, 'message': 'username is available'})
+        except json.JSONDecodeError:
+            return JsonResponse({'success': False, 'message': 'Invalid JSON'}, status=400)
+    return JsonResponse({'success': False, 'message': 'Invalid request method'}, status=405)
+
+@csrf_exempt
+def send_verification_code(request):
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        verification_code = ''.join([str(random.randint(0, 9)) for _ in range(6)])
+        
+        # Expiry time
+        expiry_time = datetime.now() + timedelta(minutes=10)  # Set expiry time for 5 minutes
+        request.session['verification_code_expiry'] = expiry_time.isoformat()
+
+        subject = 'Your Verification Code'
+        from_email = 'housewise.app@gmail.com'
+        to_email = [email]
+        text_content = (f'Hi, thanks much for creating an account with us. '
+                        f'Your participation is very much appreciated.\n\n'
+                        f'Here is your Verification Code: {verification_code}')
+        html_content = (f'<p>Hi, thanks much for creating an account with us. '
+                        f'Your participation is very much appreciated.</p>'
+                        f'<p>Here is your Verification Code: <strong>{verification_code}</strong></p>')
+
+        msg = EmailMultiAlternatives(subject, text_content, from_email, to_email)
+        msg.attach_alternative(html_content, "text/html")
+        
+        try:
+            msg.send()
+            request.session['verification_code'] = verification_code
+            return JsonResponse({'success': True, 'expires_in': 10})  # Return expiry time in minutes
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=500)
+    
+    return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=400)
+
+@csrf_exempt
+def verify_code(request):
+    if request.method == 'POST':
+        code = request.POST.get('code')
+        stored_code = request.session.get('verification_code')
+        
+        if code == stored_code:
+            return JsonResponse({'success': True})
+        else:
+            return JsonResponse({'success': False, 'error': 'Invalid verification code'}, status=400)
+    
+    return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=400)
+
+@api_view(['POST'])
+def create_user_account(request):
+    serializer = UserHousewiseSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response({"success": True, "message": "User created successfully!"}, status=status.HTTP_201_CREATED)
+    return Response({"success": False, "message": "Invalid data", "errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
 
 @api_view(['POST'])
 @authentication_classes([JWTAuthentication])
@@ -130,7 +224,7 @@ def logout_user(request):
 
         print(f"User: {request.user}")  # Check if user is authenticated
         print(f"Session Data: {request.session.items()}")  # Check all session data
-        
+
         # Get the current user's login session ID
         login_session_id = request.session.get('login_session_id')
         if login_session_id:
@@ -254,6 +348,9 @@ def login_view(request):
         return redirect('login')
 
     return render(request, "housewise/login.html")
+
+
+
 
 
 @login_required(login_url='/housewise/')

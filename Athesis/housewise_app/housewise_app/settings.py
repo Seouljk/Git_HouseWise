@@ -143,9 +143,21 @@ DATABASES = {
     }
 }
 
-POSTGRESS_LOCALLY = False
+POSTGRESS_LOCALLY = True
 if ENVIRONMENT == 'production' or POSTGRESS_LOCALLY == True:
     DATABASES['default'] = dj_database_url.parse(env('DATABASE_URL'), ssl_require=True)
+
+
+
+# settings.py
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'housewise.app@gmail.com'  # Replace with your Gmail address
+EMAIL_HOST_PASSWORD = 'dqzpoylyjztcnljs'  # Replace with the 16-character app password
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators

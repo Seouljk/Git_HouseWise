@@ -75,8 +75,6 @@ class UserHousewise(AbstractBaseUser, PermissionsMixin):
         return self.username
 
 
-    
-
 class LoginSession(models.Model):
     loginsession_id = models.AutoField(primary_key=True)
     user = models.ForeignKey(UserHousewise, on_delete=models.CASCADE, related_name="login_sessions")
