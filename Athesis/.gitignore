@@ -29,8 +29,7 @@ logs/
 Thumbs.db
 
 # Credentials or sensitive files
-resources/
-
+resources/*
 
 # Railway deployment config (if any custom file is added)
 railway.json
