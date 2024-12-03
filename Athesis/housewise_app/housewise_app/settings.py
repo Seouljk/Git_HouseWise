@@ -23,7 +23,7 @@ ENVIRONMENT = env('ENVIRONMENT', default='production')
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Path to Google Sheets credentials
-GOOGLE_SHEETS_CREDENTIALS = BASE_DIR.parent / 'resources/secure-stone-412401-bef03f4658ac.json'
+GOOGLE_SHEETS_CREDENTIALS = BASE_DIR.parent / 'resources/secure-stone-412401-d836cb00a863.json'
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
@@ -40,7 +40,7 @@ if ENVIRONMENT == 'development':
 else: 
     DEBUG = False
 
-ALLOWED_HOSTS = ['localhost','housewise-admin.up.railway.app' ,'192.168.1.3',]
+ALLOWED_HOSTS = ['localhost','housewise-admin.up.railway.app' ,'192.168.1.3', '192.168.1.5', '192.168.165.150']
 
 CSRF_TRUSTED_ORIGINS = ['https://housewise-admin.up.railway.app']
 
@@ -143,7 +143,7 @@ DATABASES = {
     }
 }
 
-POSTGRESS_LOCALLY = True
+POSTGRESS_LOCALLY = False
 if ENVIRONMENT == 'production' or POSTGRESS_LOCALLY == True:
     DATABASES['default'] = dj_database_url.parse(env('DATABASE_URL'), ssl_require=True)
 

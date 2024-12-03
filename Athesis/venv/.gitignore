@@ -29,7 +29,8 @@ logs/
 Thumbs.db
 
 # Credentials or sensitive files
-secure-stone-412401-bef03f4658ac.json
+resources\secure-stone-412401-d836cb00a863.json
+
 
 # Railway deployment config (if any custom file is added)
 railway.json

@@ -56,6 +56,7 @@ class UserHousewise(AbstractBaseUser, PermissionsMixin):
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     is_staff = models.BooleanField(default=False)  # Change to a regular field
     is_active = models.BooleanField(default=True)
+    profile_icon = models.CharField(max_length=255, null=True, blank=True, default='default_icon.png')  # Default icon path
 
     objects = UserHousewiseManager()
 

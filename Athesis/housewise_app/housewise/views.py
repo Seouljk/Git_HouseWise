@@ -129,7 +129,7 @@ def update_user(request):
         return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
+    
 @csrf_exempt
 def check_email(request):
     if request.method == 'POST':
@@ -215,6 +215,41 @@ def create_user_account(request):
         return Response({"success": True, "message": "User created successfully!"}, status=status.HTTP_201_CREATED)
     return Response({"success": False, "message": "Invalid data", "errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def set_profile_icon(request):
+    """
+    Updates the user's profile icon.
+    """
+    user = request.user  # Authenticated user
+    icon = request.data.get('icon', None)  # Get the icon from request data
+
+    if not icon:
+        return Response(
+            {"error": "No icon provided."},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    user.profile_icon = icon
+    user.save()
+    return Response(
+        {"message": "Profile icon updated successfully.", "profile_icon": user.profile_icon},
+        status=status.HTTP_200_OK
+    )
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_profile_icon(request):
+    """
+    Retrieves the user's profile icon.
+    """
+    user = request.user  # Authenticated user
+    return Response(
+        {"profile_icon": user.profile_icon},
+        status=status.HTTP_200_OK
+    )
 
 @api_view(['POST'])
 @authentication_classes([JWTAuthentication])

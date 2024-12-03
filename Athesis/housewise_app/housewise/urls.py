@@ -33,6 +33,8 @@ urlpatterns = [
     path('housewise/update_user/', views.update_user, name='update_user'),
     path('housewise/api/logout/', views.logout_user, name='logout_user'),
     path('housewise/api/create_user_account/', views.create_user_account, name='create_user_account'),
+    path('housewise/api/set-profile-icon/', views.set_profile_icon, name='set_profile_icon'),
+    path('housewise/api/get-profile-icon/', views.get_profile_icon, name='get_profile_icon'),
 
 #SCRIPT:
     path("housewise/<str:username>/scripts/", views.script_view, name="scripts"),
