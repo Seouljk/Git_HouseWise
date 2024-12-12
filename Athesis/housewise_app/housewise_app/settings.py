@@ -42,7 +42,7 @@ if ENVIRONMENT == 'development':
 else: 
     DEBUG = False
 
-ALLOWED_HOSTS = ['localhost','housewise-admin.up.railway.app' ,'192.168.1.3','172.22.96.1', '192.168.1.6', '192.168.165.150', '172.20.9.149', '172.20.10.3']
+ALLOWED_HOSTS = ['localhost','housewise-admin.up.railway.app' ,'192.168.1.3','10.77.82.108', '192.168.1.6', '192.168.165.150', '172.20.9.149', '172.20.10.3']
 
 CSRF_TRUSTED_ORIGINS = ['https://housewise-admin.up.railway.app']
 
