@@ -29,12 +29,30 @@ urlpatterns = [
 
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    
     path('housewise/auth/login/', views.login_user, name='login_user'),
     path('housewise/update_user/', views.update_user, name='update_user'),
     path('housewise/api/logout/', views.logout_user, name='logout_user'),
     path('housewise/api/create_user_account/', views.create_user_account, name='create_user_account'),
     path('housewise/api/set-profile-icon/', views.set_profile_icon, name='set_profile_icon'),
     path('housewise/api/get-profile-icon/', views.get_profile_icon, name='get_profile_icon'),
+    path('housewise/api/published-projects/', views.published_projects_view, name='published-projects'),
+    path('housewise/api/projects/<int:project_id>/toggle-like/', views.toggle_like, name='toggle_like'),
+    path('housewise/api/user-owned-projects/', views.user_owned_projects_view, name='user-owned-projects'),
+    path('housewise/api/projects/<int:pk>/toggle-publish/', views.toggle_project_publish_status, name='toggle-project-publish'),
+    path('housewise/api/create_project/', views.create_project, name='create_project'),
+    path('housewise/api/projects/<int:project_id>/delete/', views.delete_project, name='delete_project'),
+    path('housewise/api/projects/<int:project_id>/feedback/', views.save_feedback, name='save_feedback'),
+    path('housewise/api/projects/<int:project_id>/get-feedback/', views.get_feedback, name='get_feedback'),
+    path('housewise/api/liked-projects/', views.liked_projects_view, name='liked_projects_view'),
+    path('housewise/api/forgot_password_username/', views.forgot_password_username, name='forgot_password_username'),
+    path('housewise/api/send_reset_code/', views.send_reset_code, name='send_reset_code'),
+    path('housewise/api/reset_password/', views.reset_password, name='reset_password'),
+    path('housewise/api/resetverify_code/', views.resetverify_code, name='resetverify_code'),
+    path('housewise/api/session/', views.session_status, name='session_status'),
+    path('housewise/api/get_material_prices/', views.get_material_prices, name='get_material_prices'),
+
+
 
 #SCRIPT:
     path("housewise/<str:username>/scripts/", views.script_view, name="scripts"),

@@ -57,20 +57,20 @@ class Command(BaseCommand):
         self.stdout.write(f"Scraping Citihardware links...")
         self.scrape_website_links(citihardware_links, sheet, cache, MATERIALS, self.scrape_citihardware)
 
-        # self.stdout.write(f"Scraping Pinastoolsph links...")
-        # self.scrape_website_links(pinastoolsph_links, sheet, cache, MATERIALS, self.scrape_pinastoolsph)
+        self.stdout.write(f"Scraping Pinastoolsph links...")
+        self.scrape_website_links(pinastoolsph_links, sheet, cache, MATERIALS, self.scrape_pinastoolsph)
 
-        # self.stdout.write(f"Scraping Constph links...")
-        # self.scrape_website_links(constph_links, sheet, cache, MATERIALS, self.scrape_constph)
+        self.stdout.write(f"Scraping Constph links...")
+        self.scrape_website_links(constph_links, sheet, cache, MATERIALS, self.scrape_constph)
 
-        # self.stdout.write(f"Scraping Constructph links...")
-        # self.scrape_website_links(constructph_links, sheet, cache, MATERIALS, self.scrape_constructph)
+        self.stdout.write(f"Scraping Constructph links...")
+        self.scrape_website_links(constructph_links, sheet, cache, MATERIALS, self.scrape_constructph)
 
-        # self.stdout.write(f"Scraping PinoyBuilders links...")
-        # self.scrape_website_links(pinoybuilders_links, sheet, cache, MATERIALS, self.scrape_pinoybuilders)
+        self.stdout.write(f"Scraping PinoyBuilders links...")
+        self.scrape_website_links(pinoybuilders_links, sheet, cache, MATERIALS, self.scrape_pinoybuilders)
 
-        # self.stdout.write(f"Scraping Philcon links...")
-        # self.scrape_website_links(philcon_links, sheet, cache, MATERIALS, self.scrape_philcon)
+        self.stdout.write(f"Scraping Philcon links...")
+        self.scrape_website_links(philcon_links, sheet, cache, MATERIALS, self.scrape_philcon)
         
         # Ensure date is recorded in Google Sheets, even if no data was added
         self.ensure_date_entry(sheet)

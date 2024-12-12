@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect,  get_object_or_404
-from django.contrib.auth import login, logout
+from django.contrib.auth import login, logout, get_user_model
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
@@ -23,49 +23,54 @@ from django.utils.decorators import method_decorator
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.tokens import AccessToken
+from django.core.exceptions import ObjectDoesNotExist
 
+    
 
 from django.db.models import Q
-from .models import UserHousewise, LoginSession, UserType, Materials, MaterialPrice
-from .serializers import UserHousewiseSerializer
+from .models import UserHousewise, LoginSession, UserType, Materials, MaterialPrice, Project, ProjectLike, Roof, Rooms, CR, HouseType, Feedback
+from .serializers import UserHousewiseSerializer, ProjectSerializer, FeedbackSerializer
+import logging
+from .utils import generate_token  # Import the utility function
 
-#MOBILE APP API 
+
+
+
 @api_view(['POST'])
+@authentication_classes([])  # Allow unauthenticated access to this view
+@permission_classes([AllowAny])
 def login_user(request):
     username_or_email = request.data.get('username_or_email')
     password = request.data.get('password')
 
-    if username_or_email is None or password is None:
-        return Response({"error": "Please provide both username/email and password"}, status=status.HTTP_400_BAD_REQUEST)
-
+    # Validate input
+    if not username_or_email or not password:
+        return Response(
+            {"error": "Please provide both username/email and password."}, 
+            status=status.HTTP_400_BAD_REQUEST
+        )
     try:
-        # First try to get user by username
-        try:
-            user = UserHousewise.objects.get(username=username_or_email)
-        except UserHousewise.DoesNotExist:
-            # Then try to get user by email
-            try:
-                user = UserHousewise.objects.get(email=username_or_email)
-            except UserHousewise.DoesNotExist:
-                user = None
+        # Retrieve user by username or email
+        user = UserHousewise.objects.filter(
+            Q(username=username_or_email) | Q(email=username_or_email)
+        ).first()
 
-        # Check if the user exists and verify the password
-        if user and user.check_password(password):
-            # Perform actions upon successful login
-            if user.user_type.user_type == 'user':  # Modify to check for user type
+        if user and user.check_password(password):  # Verify password
+            # Check user type
+            if user.user_type.user_type.lower() == 'user':  # Case-insensitive check
                 user.last_login = timezone.now()
                 user.save()
-                login_session = LoginSession.objects.create(user=user, login_time=user.last_login)
-                request.session['login_session_id'] = login_session.loginsession_id  # Store session ID in session
-                
-                # Generate JWT token
-                refresh = RefreshToken.for_user(user)
-                token = str(refresh.access_token)
 
-                # You might want to return session details or tokens here
+                # Create login session
+                login_session = LoginSession.objects.create(user=user, login_time=user.last_login)
+                request.session['login_session_id'] = login_session.loginsession_id  # Save session ID
+                
+                # Generate JWT tokens
+                tokens = generate_token(user)  # Use utility function for token generation
+
                 return Response({
                     "message": "Login successful",
                     "user": {
@@ -73,42 +78,218 @@ def login_user(request):
                         "name": user.name,
                         "username": user.username,
                         "email": user.email,
-                        "age": user.age,
+                        "birthdate": user.birthdate,
                     },
-                    "token": token  # return JWT token
+                    "token": tokens['access'],  # Return access token
+                    "refresh": tokens['refresh'],  # Optionally return refresh token
                 }, status=status.HTTP_200_OK)
-
-            return Response({"error": "You do not have permission to access this area."}, status=status.HTTP_403_FORBIDDEN)
+            
+            return Response(
+                {"error": "You do not have permission to access this area."}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
         else:
-            return Response({"error": "Invalid username or password."}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response(
+                {"error": "Invalid username or password."}, 
+                status=status.HTTP_401_UNAUTHORIZED
+            )
 
     except Exception as e:
-        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response(
+            {"error": f"An error occurred: {str(e)}"}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+    
+
+User = get_user_model()
+logger = logging.getLogger(__name__)
+
+@csrf_exempt
+def create_project(request):
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    try:
+        # Extract and validate the token
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return JsonResponse({'error': 'Authorization header missing or invalid'}, status=403)
+
+        token = auth_header.split(' ')[1]  # Extract the token
+        try:
+            # Decode the token
+            decoded_token = AccessToken(token)
+            logger.info(f"Decoded token: {decoded_token}")
+            user_id = decoded_token['user_id']
+            user = User.objects.get(id=user_id)
+        except Exception as e:
+            logger.error(f"Error decoding token: {e}")
+            return JsonResponse({'error': f'Invalid token: {str(e)}'}, status=403)
+
+        # Check if the user is of type 'user'
+        if user.user_type.user_type.lower() != 'user':
+            return JsonResponse({'error': 'You do not have permission to create a project.'}, status=403)
+
+        # Proceed with the rest of your logic (unchanged)
+        data = json.loads(request.body)
+
+        # Fetch HouseType
+        house_type = HouseType.objects.get(description=data.get('houseType').lower())
+
+        # Create Project
+        project = Project.objects.create(
+            user=user,
+            project_name=data.get('projectName', 'Unnamed Project'),
+            length=data.get('houseLength'),
+            width=data.get('houseWidth'),
+            height=data.get('houseWallHeight'),
+            house_type=house_type
+        )
+
+        # Add Roof
+        Roof.objects.create(
+            project=project,
+            roof_type=data.get('roofType'),
+            trusses=data.get('trussType')
+        )
+
+        # Add CR if `crCount` is 1
+        if data.get('crCount') == 1:
+            CR.objects.create(
+                project=project,
+                cr_length=data.get('CrLengthValue'),
+                cr_width=data.get('CrWidthValue')
+            )
+
+        # Add Rooms
+        room_count = data.get('roomCount', 0)
+        if room_count >= 1:
+            Rooms.objects.create(
+                project=project,
+                room_number='1',
+                room_length=data.get('room1Length'),
+                room_width=data.get('room1Width'),
+                active_button=data.get('activeButtonRoom1')
+            )
+
+        if room_count == 2:
+            Rooms.objects.create(
+                project=project,
+                room_number='2',
+                room_length=data.get('room2Length'),
+                room_width=data.get('room2Width'),
+                active_button=data.get('activeButtonRoom2')
+            )
+
+        # Update project counts
+        project.update_counts()
+
+        return JsonResponse({'message': 'Project created successfully', 'project_id': project.project_id}, status=201)
+
+    except Exception as e:
+        logger.error(f"Unexpected error: {e}")
+        return JsonResponse({'error': f'Unexpected error: {str(e)}'}, status=400)
+
+@csrf_exempt
+def get_material_prices(request):
+    if request.method == "GET":
+        material_prices = {}
+        materials = Materials.objects.all()
+
+        for material in materials:
+            prices = material.prices.all()
+            if prices.exists():
+                highest_price = prices.order_by('-amount').first().amount
+                lowest_price = prices.order_by('amount').first().amount
+                material_prices[material.materials_id] = {
+                    "highest": highest_price,
+                    "lowest": lowest_price
+                }
+
+        return JsonResponse(material_prices, safe=False)
+    return JsonResponse({"error": "Invalid request method"}, status=400)
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_project(request, project_id):
+    try:
+        # Ensure the project exists and belongs to the authenticated user
+        project = Project.objects.get(pk=project_id, user=request.user)
+        project_name = project.project_name
+        project.delete()
+
+        return Response({'message': f'Project "{project_name}" deleted successfully.'}, status=status.HTTP_200_OK)
+
+    except Project.DoesNotExist:
+        return Response({'error': 'Project not found or you do not have permission to delete it.'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'error': f'Unexpected error: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+@api_view(['POST'])
+def save_feedback(request, project_id):
+    """
+    Create or update feedback for a specific project.
+    """
+    try:
+        project = Project.objects.get(pk=project_id)
+    except Project.DoesNotExist:
+        return Response({"error": "Project not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    data = request.data
+    feedback, created = Feedback.objects.update_or_create(
+        project=project,
+        defaults={
+            "rating": data.get("rating"),
+            "feedback_description": data.get("feedback_description"),
+        },
+    )
+    serializer = FeedbackSerializer(feedback)
+    return Response(serializer.data, status=status.HTTP_200_OK if not created else status.HTTP_201_CREATED)
+
+@api_view(['GET'])
+def get_feedback(request, project_id):
+    try:
+        feedback = Feedback.objects.filter(project__project_id=project_id).first()
+        if feedback:
+            serializer = FeedbackSerializer(feedback)
+            return Response(serializer.data, status=200)
+        # Return an empty object with a success response when no feedback exists
+        return Response({}, status=200)
+    except Exception as e:
+        return Response({"detail": str(e)}, status=500)
+
+from datetime import datetime
 
 @api_view(['PUT'])
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated])
 def update_user(request):
     try:
-         # Log the request headers and user details for debugging
         print(f"Request Headers: {request.headers}")
         print(f"Request User: {request.user}")
 
         user = request.user
         data = request.data
 
-         # Ensure the user type is 'user'
         if user.user_type.user_type != 'user':
             return Response({"error": "You do not have permission to perform this action."}, status=status.HTTP_403_FORBIDDEN)
-
 
         # Update fields
         user.name = data.get('name', user.name)
         user.username = data.get('username', user.username)
         user.email = data.get('email', user.email)
-        user.age = data.get('age', user.age)
 
-         # Handle password change
+        # Handle birthdate
+        if 'birthdate' in data and data['birthdate']:
+            try:
+                user.birthdate = datetime.strptime(data['birthdate'], '%Y-%m-%d').date()
+            except ValueError:
+                return Response({"error": "Invalid date format. Expected YYYY-MM-DD."}, status=status.HTTP_400_BAD_REQUEST)
+
+        print(f"Raw birthdate from request: {data.get('birthdate')}")
+        print(f"Parsed birthdate: {user.birthdate}")
+
+        # Handle password change
         current_password = data.get('current_password')
         new_password = data.get('new_password')
         confirm_password = data.get('confirm_password')
@@ -129,6 +310,7 @@ def update_user(request):
         return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
     
 @csrf_exempt
 def check_email(request):
@@ -161,6 +343,133 @@ def check_username(request):
         except json.JSONDecodeError:
             return JsonResponse({'success': False, 'message': 'Invalid JSON'}, status=400)
     return JsonResponse({'success': False, 'message': 'Invalid request method'}, status=405)
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def forgot_password_username(request):
+    username = request.data.get('username', '').strip().lower()
+
+    if not username:
+        return JsonResponse({'exists': False, 'message': 'Username is required.'}, status=400)
+
+    user_exists = UserHousewise.objects.filter(username=username).exists()
+
+    return JsonResponse(
+        {'exists': user_exists, 'message': 'Username exists.' if user_exists else 'Username does not exist.'},
+        status=200 if user_exists else 404
+    )
+
+@csrf_exempt
+@permission_classes([AllowAny])
+def send_reset_code(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body.decode('utf-8'))  # Parse JSON body
+            username = data.get('username', '').strip().lower()
+        except (json.JSONDecodeError, AttributeError):
+            return JsonResponse({'success': False, 'error': 'Invalid request payload'}, status=400)
+
+        try:
+            user = UserHousewise.objects.get(username=username)
+        except ObjectDoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Username not found'}, status=404)
+
+        email = user.email
+        verification_code = ''.join([str(random.randint(0, 9)) for _ in range(6)])
+        
+        # Expiry time
+        expiry_time = datetime.now() + timedelta(minutes=10)
+        request.session['verification_code_expiry'] = expiry_time.isoformat()
+
+        subject = 'Your Password Reset Code'
+        from_email = 'housewise.app@gmail.com'
+        to_email = [email]
+        text_content = (f'Hi {user.name},\n\n'
+                        f'You requested to reset your password. Here is your verification code:\n\n'
+                        f'{verification_code}\n\n'
+                        f'This code is valid for 10 minutes.\n\n'
+                        f'Do not Give your code to anyone else.')
+        html_content = (f'<p>Hi {user.name},</p>'
+                        f'<p>You requested to reset your password. Here is your verification code:</p>'
+                        f'<p><strong>{verification_code}</strong></p>'
+                        f'<p>This code is valid for 10 minutes.</p>'
+                        f'<p>Do not Give your code to anyone else.</p>')
+
+        msg = EmailMultiAlternatives(subject, text_content, from_email, to_email)
+        msg.attach_alternative(html_content, "text/html")
+         
+        try:
+            msg.send()
+            request.session['verification_code'] = verification_code
+            return JsonResponse({'success': True, 'expires_in': 10})  # Return expiry time in minutes
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=500)
+    
+    return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=400)
+
+@csrf_exempt
+def resetverify_code(request):
+    if request.method == 'POST':
+        # Retrieve the 'code' from POST data
+        code = request.POST.get('code')
+
+        if not code:
+            return JsonResponse({'success': False, 'error': 'Code is required'}, status=400)
+
+        # Retrieve the stored verification code from the session
+        resetstored_code = request.session.get('verification_code')
+
+        if not resetstored_code:
+            return JsonResponse({'success': False, 'error': 'No verification code found'}, status=400)
+
+        if code == resetstored_code:
+            return JsonResponse({'success': True, 'message': 'Verification successful'})
+        else:
+            return JsonResponse({'success': False, 'error': 'Invalid verification code'}, status=400)
+
+    return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=400)
+
+
+@csrf_exempt
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def reset_password(request):
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+        username = data.get('username')
+        new_password = data.get('new_password')
+        verification_code = data.get('verification_code')
+
+        if not username or not new_password or not verification_code:
+            return JsonResponse({'success': False, 'error': 'Missing required fields'}, status=400)
+
+        # Fetch the user and verify the code
+        try:
+            user = UserHousewise.objects.get(username=username)
+        except UserHousewise.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'User not found'}, status=404)
+
+        # Assuming you stored the verification code and expiry in the session or database
+        resetstored_code = request.session.get('verification_code')
+        expiry_time = request.session.get('verification_code_expiry')
+
+        if not resetstored_code or resetstored_code != verification_code:
+            return JsonResponse({'success': False, 'error': 'Invalid verification code'}, status=400)
+
+        if expiry_time and datetime.fromisoformat(expiry_time) < datetime.now():
+            return JsonResponse({'success': False, 'error': 'Verification code has expired'}, status=400)
+
+        # Update the user's password
+        user.password = make_password(new_password)
+        user.save()
+
+        # Clear the session values after use
+        request.session.pop('verification_code', None)
+        request.session.pop('verification_code_expiry', None)
+
+        return JsonResponse({'success': True, 'message': 'Password reset successful'}, status=200)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 @csrf_exempt
 def send_verification_code(request):
@@ -207,13 +516,99 @@ def verify_code(request):
     
     return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=400)
 
+@csrf_exempt
 @api_view(['POST'])
+@permission_classes([AllowAny])
 def create_user_account(request):
     serializer = UserHousewiseSerializer(data=request.data)
     if serializer.is_valid():
         serializer.save()
         return Response({"success": True, "message": "User created successfully!"}, status=status.HTTP_201_CREATED)
     return Response({"success": False, "message": "Invalid data", "errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+def published_projects_view(request):
+    try:
+        # Query for all published projects ordered by creation date (newest to oldest)
+        published_projects = Project.objects.filter(is_published=True).order_by('-date_time_created')
+        # Serialize the data
+        serializer = ProjectSerializer(published_projects, many=True, context={'request': request})
+        # Return the serialized data as JSON
+        return Response(serializer.data, status=200)
+    except Exception as e:
+        return Response({"detail": str(e)}, status=500)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])  # Ensure only authenticated users can access
+def user_owned_projects_view(request):
+    try:
+        # Filter projects owned by the logged-in user, ordered by most recent
+        user_owned_projects = Project.objects.filter(user=request.user).order_by('-date_time_created')
+        
+        # Serialize the data
+        serializer = ProjectSerializer(user_owned_projects, many=True, context={'request': request})
+        
+        return Response(serializer.data, status=200)
+    except Exception as e:
+        return Response({"detail": str(e)}, status=500)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def liked_projects_view(request):
+    try:
+        # Fetch liked projects for the logged-in user, ordered by most recent
+        user = request.user
+        liked_projects = Project.objects.filter(project_likes__user=user).order_by('-date_time_created')
+        
+        # Serialize the data
+        serializer = ProjectSerializer(liked_projects, many=True, context={'request': request})
+        
+        return Response(serializer.data, status=200)
+    except Exception as e:
+        return Response({"detail": str(e)}, status=500)
+
+
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])  # Ensure only authenticated users can access
+def toggle_project_publish_status(request, pk):
+    try:
+        # Fetch the project owned by the user and matching the primary key
+        project = Project.objects.get(pk=pk, user=request.user)
+    except Project.DoesNotExist:
+        return Response({"error": "Project not found or not owned by you."}, status=status.HTTP_404_NOT_FOUND)
+
+    # Toggle the is_published status
+    is_published = request.data.get('is_published', None)
+    if is_published is not None:
+        project.is_published = is_published
+        project.save()
+        return Response({"success": True, "is_published": project.is_published}, status=status.HTTP_200_OK)
+
+    return Response({"error": "Invalid request data."}, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['POST'])
+def toggle_like(request, project_id):
+    user = request.user  # Assumes user is authenticated
+    project = get_object_or_404(Project, project_id=project_id)
+
+    # Check if the user has already liked the project
+    existing_like = ProjectLike.objects.filter(user=user, project=project).first()
+    if existing_like:
+        # Unlike
+        existing_like.delete()
+    else:
+        # Like
+        ProjectLike.objects.create(user=user, project=project)
+
+    # Update likes_count and save the project
+    project.likes_count = ProjectLike.objects.filter(project=project).count()
+    project.save()
+
+    liked = not bool(existing_like)  # True if liked, False if unliked
+    return Response({"success": True, "liked": liked, "likes_count": project.likes_count})
 
 
 @api_view(['POST'])
@@ -238,6 +633,41 @@ def set_profile_icon(request):
         status=status.HTTP_200_OK
     )
 
+@api_view(['GET'])
+@authentication_classes([JWTAuthentication])  # Ensure the request is authenticated
+@permission_classes([IsAuthenticated])
+def session_status(request):
+    try:
+        user = request.user
+        login_session_id = request.session.get('login_session_id')
+
+        if not login_session_id:
+            return Response({'valid': False, 'error': 'No active session found'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            login_session = LoginSession.objects.get(loginsession_id=login_session_id, user=user)
+            
+            # Check if the session is still active
+            if login_session.logout_time:
+                return Response({'valid': False, 'error': 'Session has ended'}, status=status.HTTP_401_UNAUTHORIZED)
+
+            # Optionally, you can add a check for session expiry
+            session_duration = timezone.now() - login_session.login_time
+            if session_duration.total_seconds() > 604800:  # 7 days
+                login_session.logout_time = timezone.now()
+                login_session.save()
+                return Response({'valid': False, 'error': 'Session has expired'}, status=status.HTTP_401_UNAUTHORIZED)
+
+            # Return valid session status
+            user_data = UserHousewiseSerializer(user).data
+            return Response({'valid': True, 'user': user_data}, status=status.HTTP_200_OK)
+
+        except LoginSession.DoesNotExist:
+            return Response({'valid': False, 'error': 'Login session not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    except Exception as e:
+        return Response({'valid': False, 'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -256,33 +686,23 @@ def get_profile_icon(request):
 @permission_classes([IsAuthenticated])
 def logout_user(request):
     try:
-
-        print(f"User: {request.user}")  # Check if user is authenticated
-        print(f"Session Data: {request.session.items()}")  # Check all session data
-
-        # Get the current user's login session ID
+        # Fallback if session ID is not in session data
         login_session_id = request.session.get('login_session_id')
         if login_session_id:
-            # Get the LoginSession object and update logout details
             login_session = LoginSession.objects.get(loginsession_id=login_session_id)
             login_session.logout_time = timezone.now()
             login_session.login_duration = login_session.logout_time - login_session.login_time
             login_session.save()
 
-            # Clear the session and log out the user
-            logout(request)
-            request.session.flush()  # Clear all session data
-
-            # Send a response confirming successful logout
-            return Response({'message': 'Logged out successfully'}, status=status.HTTP_200_OK)
-
-        else:
-            return Response({'error': 'No active session found'}, status=status.HTTP_400_BAD_REQUEST)
+        logout(request)
+        request.session.flush()
+        return Response({'message': 'Logged out successfully'}, status=status.HTTP_200_OK)
     
     except LoginSession.DoesNotExist:
         return Response({'error': 'Login session not found'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 
 #WEBSITE API

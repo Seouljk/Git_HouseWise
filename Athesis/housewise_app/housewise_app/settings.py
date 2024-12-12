@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 import os
 from pathlib import Path
 import dj_database_url
+from datetime import timedelta
+
 from environ import Env
 env = Env()
 Env.read_env()
@@ -40,7 +42,7 @@ if ENVIRONMENT == 'development':
 else: 
     DEBUG = False
 
-ALLOWED_HOSTS = ['localhost','housewise-admin.up.railway.app' ,'192.168.1.3', '192.168.1.5', '192.168.165.150']
+ALLOWED_HOSTS = ['localhost','housewise-admin.up.railway.app' ,'192.168.1.3','172.22.96.1', '192.168.1.6', '192.168.165.150', '172.20.9.149', '172.20.10.3']
 
 CSRF_TRUSTED_ORIGINS = ['https://housewise-admin.up.railway.app']
 
@@ -77,23 +79,21 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
+    'corsheaders.middleware.CorsMiddleware',  # Must be before AuthenticationMiddleware
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'housewise.middleware.SessionCleanupMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.cache.UpdateCacheMiddleware',
     'django.middleware.cache.FetchFromCacheMiddleware',
-
-
-    #CORS
-    'corsheaders.middleware.CorsMiddleware',
-    'django.middleware.common.CommonMiddleware',
 ]
 
-CORS_ALLOW_ALL_ORIGINS = True
 
+
+CORS_ALLOW_ALL_ORIGINS = True
 
 
 
@@ -101,9 +101,26 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '5/minute',  # Limit anonymous requests
+        'user': '10/minute',  # Limit authenticated requests
+    },
 }
 
-
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': SECRET_KEY,
+}
 
 # Cache settings for sensitive data
 CACHE_MIDDLEWARE_SECONDS = 0
@@ -143,7 +160,7 @@ DATABASES = {
     }
 }
 
-POSTGRESS_LOCALLY = False
+POSTGRESS_LOCALLY = True
 if ENVIRONMENT == 'production' or POSTGRESS_LOCALLY == True:
     DATABASES['default'] = dj_database_url.parse(env('DATABASE_URL'), ssl_require=True)
 
@@ -191,6 +208,9 @@ USE_TZ = True
 
 # Set the timezone to Philippine Time
 TIME_ZONE = 'Asia/Manila'
+
+SESSION_COOKIE_AGE = 604800    # 1 hour
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
