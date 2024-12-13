@@ -42,7 +42,7 @@ if ENVIRONMENT == 'development':
 else: 
     DEBUG = False
 
-ALLOWED_HOSTS = ['localhost','housewise-admin.up.railway.app' ,'192.168.1.3','10.77.82.108', '192.168.1.6', '192.168.165.150', '172.20.9.149', '172.20.10.3']
+ALLOWED_HOSTS = ['localhost','housewise-admin.up.railway.app' , '192.168.1.6', '192.168.1.8' ]
 
 CSRF_TRUSTED_ORIGINS = ['https://housewise-admin.up.railway.app']
 
@@ -71,6 +71,8 @@ INSTALLED_APPS = [
      # mobile apps
     'rest_framework',
     'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',  # Add this line for token blacklisting
+
 
     #CORS
     'corsheaders',
@@ -115,11 +117,13 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=10),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+   'ROTATE_REFRESH_TOKENS': True,  # Issue new refresh token on each refresh
+    'BLACKLIST_AFTER_ROTATION': True,  # Blacklist old refresh tokens
     'AUTH_HEADER_TYPES': ('Bearer',),
     'ALGORITHM': 'HS256',
-    'SIGNING_KEY': SECRET_KEY,
+    'SIGNING_KEY': 'your_secret_key',
 }
 
 # Cache settings for sensitive data
@@ -209,7 +213,7 @@ USE_TZ = True
 # Set the timezone to Philippine Time
 TIME_ZONE = 'Asia/Manila'
 
-SESSION_COOKIE_AGE = 604800    # 1 hour
+SESSION_COOKIE_AGE = 3600    # 1 hour
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 
 # Static files (CSS, JavaScript, Images)

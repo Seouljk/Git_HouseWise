@@ -25,7 +25,7 @@ from rest_framework.decorators import api_view, authentication_classes, permissi
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
 from django.core.exceptions import ObjectDoesNotExist
 
     
@@ -520,11 +520,23 @@ def verify_code(request):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def create_user_account(request):
-    serializer = UserHousewiseSerializer(data=request.data)
+    data = request.data
+
+    # Parse and validate the birthdate field
+    if 'birthdate' in data and data['birthdate']:
+        try:
+            data['birthdate'] = datetime.strptime(data['birthdate'], '%Y-%m-%d').date()
+        except ValueError:
+            return Response({"success": False, "message": "Invalid date format. Expected YYYY-MM-DD."}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Use the serializer for validation and saving
+    serializer = UserHousewiseSerializer(data=data)
     if serializer.is_valid():
         serializer.save()
         return Response({"success": True, "message": "User created successfully!"}, status=status.HTTP_201_CREATED)
+    
     return Response({"success": False, "message": "Invalid data", "errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 @api_view(['GET'])
@@ -686,23 +698,30 @@ def get_profile_icon(request):
 @permission_classes([IsAuthenticated])
 def logout_user(request):
     try:
-        # Fallback if session ID is not in session data
+        # Retrieve the refresh token from the request data
+        refresh_token = request.data.get('refresh_token')  # Correct key: `refresh_token`
+        if refresh_token:
+            token = RefreshToken(refresh_token)
+            token.blacklist()  # Blacklist the token
+
+        # Handle login session updates
         login_session_id = request.session.get('login_session_id')
         if login_session_id:
-            login_session = LoginSession.objects.get(loginsession_id=login_session_id)
-            login_session.logout_time = timezone.now()
-            login_session.login_duration = login_session.logout_time - login_session.login_time
-            login_session.save()
+            try:
+                login_session = LoginSession.objects.get(loginsession_id=login_session_id)
+                login_session.logout_time = timezone.now()
+                login_session.login_duration = login_session.logout_time - login_session.login_time
+                login_session.save()
+            except LoginSession.DoesNotExist:
+                return Response({'error': 'Login session not found'}, status=status.HTTP_404_NOT_FOUND)
 
+        # Log out the user and clear the session
         logout(request)
         request.session.flush()
         return Response({'message': 'Logged out successfully'}, status=status.HTTP_200_OK)
-    
-    except LoginSession.DoesNotExist:
-        return Response({'error': 'Login session not found'}, status=status.HTTP_404_NOT_FOUND)
+
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
 
 
 #WEBSITE API
