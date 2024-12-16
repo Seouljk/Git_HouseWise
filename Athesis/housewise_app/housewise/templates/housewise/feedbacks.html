@@ -2,8 +2,11 @@
 <link rel="stylesheet" href="{% static 'housewise/feedbacks.css' %}">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-<script src="{% static 'housewise/javascript/user.js' %}"></script>
+<script src="{% static 'housewise/javascript/feedback.js' %}"></script>
 <script src="{% static 'housewise/javascript/dropdown.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
 
 <div class="container">
     <div class="header">
@@ -12,7 +15,7 @@
         </div>
         <div class="header-option">
             <i class="fa-regular fa-comment-dots"></i>
-            <span class="material-text">Feedbacks</span>  
+            <span class="user-text">Feedbacks</span>  
         </div>        
         <div class="logout">
             <button class="dropdown-btn" data-username="{{ request.user.username }}">
@@ -29,63 +32,95 @@
             </div>
         </div>        
     </div>
+    <div class="graph-container">
+        <div class="graph-header">
+            <a href="{% url 'menu' user.username %}" class="back-btn">
+                <i class="fa-solid fa-arrow-left"></i> Back
+            </a>
+            <h2>Feedback Graphs</h2>
+        </div>
+        <div class="graph-content">
+            <!-- First Container -->
+            <div class="graph-box">
+                <div class="info-container">
+                    <div class="info-box" id="total-projects">
+                        <p>Total Projects</p>
+                        <h3>0</h3>
+                    </div>
+                    <div class="info-box" id="total-projects-rated">
+                        <p>Total Projects Rated</p>
+                        <h3>0</h3>
+                    </div>
+                </div>
+            </div>
+    
+            <!-- Second Container -->
+            <div class="graph-box">
+                <div class="info-container">
+                    <div class="info-box">
+                        <p>Average Ratings</p>
+                        <h3 id="average-rating">0.00/5</h3> <!-- Updated default format -->
+                    </div>                    
+                </div>
+            </div>
+    
+            <!-- Third Container (Donut Chart Placeholder) -->
+            <div class="graph-box">
+                <canvas id="userDonutChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    
+
     <!-- Dashboard section -->
     <div class="dashboard-section">
         <div class="dashboard">
             <div class="dashboard-header">
-                <a href="{% url 'menu' user.username %}" class="back-btn">
-                    <i class="fa-solid fa-arrow-left"></i> Back
-                </a>
+            
                 <h2>Feedbacks</h2>
             </div>
-            <!-- Materials List -->
-            <ul class="feedbacks-list">
-                <li class="feedbacks-item" data-material-id="1">
-                    <div class="feedbacks-row">
-                        <p>Material 1</p>
-                        <p class="price">$10</p>
-                    </div>
-                </li>
-                <li class="feedbacks-item" data-material-id="2">
-                    <div class="feedbacks-row">
-                        <p>Material 2</p>
-                        <p class="price">$15</p>
-                    </div>
-                </li>
-                <li class="feedbacks-item" data-material-id="3">
-                    <div class="feedbacks-row">
-                        <p>Material 3</p>
-                        <p class="price">$20</p>
-                    </div>
-                </li>
-                <!-- Add more materials as needed -->
-            </ul>
-        </div>
 
-        <!-- Feedbacks Info Column -->
-        <div class="feedbacks-info" id="feedbacks-info">
-            <h2>Feedback Details</h2>
-            
-            <div class="feedbacks-list">
-                <div class="feedback-row">
-                    <p class="rating"><strong>Rating:</strong> 
-                        <span class="stars">
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="far fa-star"></i>
-                        </span>
-                    </p>
-                    <p class="description"><strong>Description:</strong> <span id="feedback-description-1">Great material!</span></p>
+            <!-- Users List -->
+            <ul class="Feedback-list" id="feedback-list">
+                <li>Loading feedbacks...</li> <!-- Placeholder before data loads -->
+            </ul>            
+
+        </div
+
+        <!-- User Info Column -->
+        <div class="feedback-info" id="feedback-info" data-default="true">
+            <!-- Default Message -->
+            <div class="default-message" id="default-message">
+                <p>Click on a Feedback to view information.</p>
+            </div>
+        
+            <!-- User Details Section -->
+            <div class="feedback-details" id="feedback-details" style="display: none;">
+                <div class="feedback-details-header">
+                    <h3>Feedback Details</h3>
+
+                    <div class="feedbacks-container">
+                        <button class="feedback-btn" id="feedback-username-btn">
+                            <i class="fa-regular fa-comment-dots"></i> <span id="feedback-username">Username</span>
+                        </button>
+                    </div>
+                    
+                    
                 </div>
-                <!-- Add more feedback rows as needed -->
+
+                <p><strong>Feedback ID:</strong> <span id="feedback-id"></span></p>
+                <p><strong>Project Name:</strong> <span id="project-name"></span></p>
+                <p><strong>Rating:</strong> <span id="rating"></span></p>
+                <p><strong>Date and Time:</strong> <span id="feedback-datetime"></span></p>
+                <p><strong>User:</strong> <span id="user"></span></p>
+                <p><strong>Description:</strong> <span id="description"></span></p>
+               
             </div>
         </div>
-        
-        
+    
     </div>
-</div>
+</div>  
 
 <script>
     document.querySelector('.dropdown-btn').addEventListener('click', function() {

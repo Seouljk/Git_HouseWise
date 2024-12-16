@@ -30,7 +30,7 @@ from django.core.exceptions import ObjectDoesNotExist
 
     
 
-from django.db.models import Q
+from django.db.models import Q, Count, Avg
 from .models import UserHousewise, LoginSession, UserType, Materials, MaterialPrice, Project, ProjectLike, Roof, Rooms, CR, HouseType, Feedback
 from .serializers import UserHousewiseSerializer, ProjectSerializer, FeedbackSerializer
 import logging
@@ -824,9 +824,6 @@ def login_view(request):
     return render(request, "housewise/login.html")
 
 
-
-
-
 @login_required(login_url='/housewise/')
 @never_cache
 def logout_view(request):
@@ -861,47 +858,191 @@ def menu_view(request, username):
 @login_required(login_url='/housewise/')
 @never_cache
 def user_list(request, username):
-    user_type_user = UserType.objects.get(user_type='user')  # Get UserType object
-    users = UserHousewise.objects.filter(user_type=user_type_user).order_by('-created_at')  # Fetch users
-    
-    # Get login sessions for each user
+    user_type_user = UserType.objects.get(user_type='user')
+    users = UserHousewise.objects.filter(user_type=user_type_user).order_by('-created_at')
+
     selected_user = None
     login_sessions = []
-    
+    feedbacks = []
     if 'selected_id' in request.GET:
         selected_id = request.GET.get('selected_id')
         selected_user = UserHousewise.objects.get(id=selected_id)
-        login_sessions = selected_user.login_sessions.all().order_by('-login_time')  # Order by latest login time
+        login_sessions = selected_user.login_sessions.all().order_by('-login_time')
+
+        # Fetch feedbacks for the selected user
+        feedbacks = Feedback.objects.filter(project__user=selected_user).order_by('-feedback_datetime')
+
+        # Format login sessions for frontend
+        formatted_sessions = [
+            {
+                "login_time": session.login_time.strftime('%Y-%m-%d %H:%M:%S'),
+                "logout_time": session.logout_time.strftime('%Y-%m-%d %H:%M:%S') if session.logout_time else "Active",
+                "duration": str(session.login_duration) if session.logout_time else "Active",
+                "is_active": session.logout_time is None
+            }
+            for session in login_sessions
+        ]
+
+        # Format feedbacks for frontend
+        formatted_feedbacks = [
+            {
+                "project_name": feedback.project.project_name if feedback.project else "No Project",
+                "project_created": feedback.project.date_time_created.strftime('%Y-%m-%d %H:%M:%S') if feedback.project else "N/A",
+                "rating": feedback.rating,
+                "description": feedback.feedback_description,
+                "feedback_datetime": feedback.feedback_datetime.strftime('%Y-%m-%d %H:%M:%S')
+            }
+            for feedback in feedbacks
+        ]
+    else:
+        formatted_sessions = []
+        formatted_feedbacks = []
 
     return render(request, 'housewise/user.html', {
         'users': users,
-        'login_sessions': login_sessions,
+        'login_sessions': formatted_sessions,
+        'feedbacks': formatted_feedbacks,
         'selected_user': selected_user
     })
 
+def dashboard_data_api(request):
+    try:
+        user_type_user = UserType.objects.get(user_type='user')
+
+        # Total users of type 'User'
+        total_users = UserHousewise.objects.filter(user_type=user_type_user).count()
+
+        # Total users logged in
+        total_users_logged_in = LoginSession.objects.filter(
+            user__user_type=user_type_user,
+            logout_time__isnull=False
+        ).values('user').distinct().count()
+
+        # Calculate users not logged in
+        total_users_not_logged_in = total_users - total_users_logged_in
+
+        # Total feedbacks received
+        total_feedbacks = Feedback.objects.count()
+
+        data = {
+            'total_users': total_users,
+            'total_users_logged_in': total_users_logged_in,
+            'total_users_not_logged_in': total_users_not_logged_in,
+            'total_feedbacks': total_feedbacks,
+        }
+    except UserType.DoesNotExist:
+        data = {
+            'total_users': 0,
+            'total_users_logged_in': 0,
+            'total_users_not_logged_in': 0,
+            'total_feedbacks': 0,
+            'error': "UserType 'User' does not exist",
+        }
+
+    return JsonResponse(data)
+
+
+
+
 @login_required(login_url='/housewise/')
-@never_cache
 def user_login_sessions(request):
-    if request.method == 'GET':
-        id = request.GET.get('id')
+    if 'user_id' not in request.GET:
+        return JsonResponse({"error": "No user_id provided"}, status=400)
+
+    user_id = request.GET['user_id']
+    try:
+        user = UserHousewise.objects.get(id=user_id)
+        sessions = user.login_sessions.all().order_by('-login_time')
+
+        # Format the data for JSON response
+        session_data = [
+            {
+                "login_time": session.login_time.strftime('%Y-%m-%d %H:%M:%S'),
+                "logout_time": session.logout_time.strftime('%Y-%m-%d %H:%M:%S') if session.logout_time else "Active",
+                "duration": str(session.login_duration) if session.logout_time else "Active",
+                "is_active": session.logout_time is None
+            }
+            for session in sessions
+        ]
+
+        return JsonResponse({"login_sessions": session_data}, status=200)
+
+    except UserHousewise.DoesNotExist:
+        return JsonResponse({"error": "User not found"}, status=404)
+    
+
+@login_required(login_url='/housewise/')
+def user_feedbacks(request):
+    user_id = request.GET.get('user_id')
+    if user_id:
+        feedbacks = Feedback.objects.filter(project__user_id=user_id).order_by('-feedback_datetime')
+        feedback_data = [
+            {
+                "project_name": feedback.project.project_name if feedback.project else "No Project",
+                "project_created": feedback.project.date_time_created.strftime('%Y-%m-%d %H:%M:%S') if feedback.project else "N/A",
+                "rating": feedback.rating,
+                "description": feedback.feedback_description,
+                "feedback_datetime": feedback.feedback_datetime.strftime('%Y-%m-%d %H:%M:%S'),
+            }
+            for feedback in feedbacks
+        ]
+        return JsonResponse({"feedbacks": feedback_data}, safe=False)
+    return JsonResponse({"feedbacks": []})
+
+def graph_data_api(request):
+    # Total projects created by all users
+    total_projects = Project.objects.count()
+
+    # Total projects rated (projects with at least one feedback)
+    total_projects_rated = Project.objects.filter(feedbacks__isnull=False).distinct().count()
+
+    # Calculate the average rating
+    feedback_stats = Feedback.objects.aggregate(avg_rating=Avg('rating'))
+    average_rating = feedback_stats.get('avg_rating', 0)
+
+    # Add a print statement to debug
+    print("Average Rating Calculated:", average_rating)
+
+    # Format the average rating for display
+    formatted_average_rating = f"{round(average_rating, 2)}/5" if average_rating else "0.00/5"
+
+    data = {
+        'total_projects': total_projects,
+        'total_projects_rated': total_projects_rated,
+        'average_rating': formatted_average_rating,
+    }
+
+    return JsonResponse(data)
+
+
+
+def feedback_list_api(request):
+    feedbacks = Feedback.objects.select_related('project', 'project__user').all()
+    feedback_data = [
+        {
+            "feedback_id": feedback.feedback_id,
+            "project_name": feedback.project.project_name if feedback.project else "N/A",
+            "rating": feedback.rating,
+            "feedback_datetime": feedback.feedback_datetime,
+            "description": feedback.feedback_description,
+            "user": feedback.project.user.username if feedback.project else "Unknown User",
+        }
+        for feedback in feedbacks
+    ]
+    return JsonResponse({"feedbacks": feedback_data})
+
+
+@csrf_exempt
+def delete_user(request, user_id):
+    if request.method == 'DELETE':
         try:
-            user = UserHousewise.objects.get(id=id)
-            login_sessions = user.login_sessions.all().order_by('-login_time')
+            user = get_object_or_404(UserHousewise, id=user_id)
+            user.delete()
+            return JsonResponse({'message': 'User deleted successfully!'}, status=200)
+        except Exception as e:
+            return JsonResponse({'message': 'Error deleting user.', 'error': str(e)}, status=500)
+    return JsonResponse({'message': 'Invalid request method.'}, status=405)
 
-            sessions_data = []
-            for session in login_sessions:
-                session_data = {
-                    'login_time': session.login_time,
-                    'login_duration': str(session.login_duration) if session.login_duration else None,
-                }
-                sessions_data.append(session_data)
-
-            return JsonResponse({'sessions': sessions_data}, status=200)
-
-        except UserHousewise.DoesNotExist:
-            return JsonResponse({'error': 'User not found'}, status=404)
-
-    return JsonResponse({'error': 'Invalid request method'}, status=400)
 
 
 @login_required(login_url='/housewise/')
