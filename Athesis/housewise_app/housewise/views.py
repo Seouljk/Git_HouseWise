@@ -30,13 +30,11 @@ from django.core.exceptions import ObjectDoesNotExist
 
     
 
-from django.db.models import Q, Count, Avg
+from django.db.models import Q, Count, Avg, Max, Min
 from .models import UserHousewise, LoginSession, UserType, Materials, MaterialPrice, Project, ProjectLike, Roof, Rooms, CR, HouseType, Feedback
 from .serializers import UserHousewiseSerializer, ProjectSerializer, FeedbackSerializer
 import logging
 from .utils import generate_token  # Import the utility function
-
-
 
 
 @api_view(['POST'])
@@ -864,6 +862,7 @@ def user_list(request, username):
     selected_user = None
     login_sessions = []
     feedbacks = []
+    
     if 'selected_id' in request.GET:
         selected_id = request.GET.get('selected_id')
         selected_user = UserHousewise.objects.get(id=selected_id)

@@ -24,8 +24,8 @@ function closeFeedbackModal() {
 }
 
 
-function showUserInfo(userId, name, age, username, password, email) {
 
+function showUserInfo(userId, name, age, username, password, email) {
     const userInfo = document.getElementById('user-info');
     const defaultMessage = document.getElementById('default-message');
     const userDetails = document.getElementById('user-details');
@@ -38,7 +38,7 @@ function showUserInfo(userId, name, age, username, password, email) {
     document.getElementById('user-password').textContent = '****************';
     document.getElementById('user-email').textContent = email;
 
-    // Fetch login session data via AJAX
+    // Fetch login sessions for the user
     fetch(`/housewise/login_sessions/?user_id=${userId}`)
         .then(response => response.json())
         .then(data => {
@@ -67,7 +67,7 @@ function showUserInfo(userId, name, age, username, password, email) {
             document.getElementById('log-entries').innerHTML = "<p>Error loading login sessions.</p>";
         });
 
-    // Fetch feedback data via AJAX
+    // Fetch feedbacks for the user
     fetch(`/housewise/user_feedbacks/?user_id=${userId}`)
         .then(response => response.json())
         .then(data => {
@@ -102,6 +102,7 @@ function showUserInfo(userId, name, age, username, password, email) {
     userDetails.style.display = 'block';
     userInfo.setAttribute('data-default', 'false');
 }
+
 
 
 function resetUserInfo() {
@@ -183,3 +184,6 @@ async function fetchDashboardDataAndRenderChart() {
 document.addEventListener('DOMContentLoaded', fetchDashboardDataAndRenderChart);
 
 
+if (!urlParams.get('selected_id')) {
+    resetUserInfo();
+}

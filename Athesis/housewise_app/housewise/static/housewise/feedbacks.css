@@ -258,6 +258,12 @@ body {
     background-color: #ffd700;
 }
 
+.feedback-item.active {
+    background-color: #ffd700; /* Match hover color */
+    border: 2px solid #ff9900; /* Optional: Add emphasis with border */
+    color: #000; /* Adjust text color for visibility */
+}
+
 .user-link {
     color: #007bff;
     text-decoration: none;

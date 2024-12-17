@@ -69,6 +69,7 @@
 </div>
 
 <script>
+    
      // Handle click event on material buttons
      document.querySelectorAll('.material-button').forEach(button => {
         button.addEventListener('click', function() {
@@ -98,5 +99,17 @@
     // Toggle the dropdown for the user menu
     document.querySelector('.dropdown-btn').addEventListener('click', function() {
         document.querySelector('.dropdown-content').classList.toggle('active');
+    });
+
+
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.material-item').forEach(item => {
+            item.addEventListener('click', function() {
+                document.querySelectorAll('.material-item').forEach(materialItem => {
+                    materialItem.classList.remove('active');
+                });
+                this.classList.add('active');
+            });
+        });
     });
 </script>

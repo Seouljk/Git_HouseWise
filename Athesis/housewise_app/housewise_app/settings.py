@@ -161,7 +161,7 @@ DATABASES = {
         'PASSWORD': 'housewise123',
         'HOST': 'localhost',
         'PORT': '5432',
-    }
+    }   
 }
 
 POSTGRESS_LOCALLY = False

@@ -23,6 +23,7 @@ urlpatterns = [
     path("housewise/<str:username>/profile/save/", views.save_profile_changes, name='save_profile_changes'),
 
 
+
 #EMAIL 
     path('housewise/api/send_verification_code/', views.send_verification_code, name='send_verification_code'),
     path('housewise/api/verify_code/', views.verify_code, name='verify_code'),
@@ -34,6 +35,8 @@ urlpatterns = [
 
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('housewise/api/get_material_prices/', views.get_material_prices, name='get_material_prices'),
+
     
     path('housewise/auth/login/', views.login_user, name='login_user'),
     path('housewise/update_user/', views.update_user, name='update_user'),

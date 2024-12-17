@@ -152,6 +152,17 @@
 </div>  
 
 <script>
+
+document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.user-item').forEach(item => {
+            item.addEventListener('click', function() {
+                document.querySelectorAll('.user-item').forEach(userItem => {
+                    userItem.classList.remove('active');
+                });
+                this.classList.add('active');
+            });
+        });
+    });
     
 document.querySelector('.dropdown-btn').addEventListener('click', function() {
     document.querySelector('.logout').classList.toggle('active');
@@ -204,6 +215,34 @@ document.querySelector('.action-buttons .delete-btn').addEventListener('click', 
 function getCSRFToken() {
     return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 }
+
+
+document.addEventListener('DOMContentLoaded', function () {
+    const urlParams = new URLSearchParams(window.location.search);
+    const selectedId = urlParams.get('selected_id');
+
+    if (selectedId) {
+        // Highlight the corresponding user item
+        const userButton = document.querySelector(`.user-button[onclick*="'${selectedId}'"]`);
+        if (userButton) {
+            userButton.parentElement.classList.add('active'); // Add 'active' class to parent <li>
+
+            // Extract user details from the onclick function
+            const onclickContent = userButton.getAttribute('onclick');
+            const regex = /showUserInfo\((.*?)\)/;
+            const matches = regex.exec(onclickContent);
+            if (matches && matches[1]) {
+                const userInfo = matches[1].split(',').map(value => value.trim().replace(/['"]/g, ''));
+                const [id, name, age, username, password, email] = userInfo;
+
+                // Populate user details
+                showUserInfo(id, name, age, username, password, email);
+            }
+        } else {
+            console.error('No matching user button found for selected_id:', selectedId);
+        }
+    }
+});
 
 
 </script>

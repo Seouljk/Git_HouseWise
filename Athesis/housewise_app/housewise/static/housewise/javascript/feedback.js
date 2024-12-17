@@ -4,6 +4,29 @@ function redirectToMenu() {
     window.location.href = `/housewise/${username}/menu/`; // Ensure trailing slash
 }
 
+function redirectToUserMenu(button) {
+    const userId = button.getAttribute('data-user-id'); // Extract user ID
+    const adminUsername = button.getAttribute('data-admin-username'); // Extract admin username
+    console.log("Redirect Button Clicked. User ID:", userId, "Admin Username:", adminUsername);
+
+    if (userId && adminUsername) {
+        // Redirect to the user menu with the selected_id parameter
+        window.location.href = `/housewise/${adminUsername}/menu/user/?selected_id=${userId}`;
+    } else {
+        console.error('User ID or Admin Username is missing for redirection.');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    const feedbackButton = document.getElementById('feedback-username-btn');
+    if (feedbackButton) {
+        feedbackButton.addEventListener('click', function () {
+            console.log('Feedback Button Clicked');
+        });
+    } else {
+        console.error('Feedback Button not found.');
+    }
+});
 
 async function fetchFeedbacks() {
     try {
@@ -35,7 +58,6 @@ async function fetchFeedbacks() {
     }
 }
 
-
 // Generate star rating HTML
 function generateStars(rating) {
     const maxStars = 5;
@@ -50,7 +72,7 @@ function generateStars(rating) {
 
 async function showFeedbackDetails(feedbackId) {
     try {
-        const response = await fetch('/housewise/api/feedbacks/'); // Absolute path
+        const response = await fetch('/housewise/api/feedbacks/');
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -66,7 +88,11 @@ async function showFeedbackDetails(feedbackId) {
             document.getElementById('description').textContent = feedback.description;
 
             // Replace text in the feedback button with the username
-            document.getElementById('feedback-username').textContent = feedback.user;
+            const feedbackButton = document.getElementById('feedback-username-btn');
+            feedbackButton.textContent = feedback.user;
+
+            // Dynamically set data-user-id
+            feedbackButton.setAttribute('data-user-id', feedback.feedback_id); // Or use the correct user_id if available
 
             // Show feedback details section
             document.getElementById('default-message').style.display = 'none';
@@ -137,3 +163,21 @@ async function fetchGraphDataAndRenderChart() {
 document.addEventListener('DOMContentLoaded', fetchGraphDataAndRenderChart);
 
 
+// Add click event listener to toggle 'active' class for feedback items
+document.addEventListener('DOMContentLoaded', function () {
+    const feedbackList = document.getElementById('feedback-list');
+
+    feedbackList.addEventListener('click', function (event) {
+        const clickedItem = event.target.closest('.feedback-item');
+
+        if (clickedItem) {
+            // Remove 'active' class from all feedback items
+            document.querySelectorAll('.feedback-item').forEach(item => {
+                item.classList.remove('active');
+            });
+
+            // Add 'active' class to the clicked item
+            clickedItem.classList.add('active');
+        }
+    });
+});

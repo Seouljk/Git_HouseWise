@@ -101,10 +101,15 @@
                     <h3>Feedback Details</h3>
 
                     <div class="feedbacks-container">
-                        <button class="feedback-btn" id="feedback-username-btn">
-                            <i class="fa-regular fa-comment-dots"></i> <span id="feedback-username">Username</span>
+                        <button class="feedback-btn" id="feedback-username-btn" 
+                            data-user-id="" 
+                            data-admin-username="{{ request.user.username }}" 
+                            onclick="redirectToUserMenu(this)">
+                            <i class="fa-solid fa-user"></i> <span id="feedback-username">Username</span>
                         </button>
+
                     </div>
+                    
                     
                     
                 </div>
@@ -126,4 +131,5 @@
     document.querySelector('.dropdown-btn').addEventListener('click', function() {
         document.querySelector('.logout').classList.toggle('active');
     });
+    
 </script>
