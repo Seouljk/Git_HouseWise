@@ -9,9 +9,11 @@ https://docs.djangoproject.com/en/5.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
-
+import os
 from pathlib import Path
 import dj_database_url
+from datetime import timedelta
+
 from environ import Env
 env = Env()
 Env.read_env()
@@ -23,7 +25,7 @@ ENVIRONMENT = env('ENVIRONMENT', default='production')
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Path to Google Sheets credentials
-GOOGLE_SHEETS_CREDENTIALS = BASE_DIR.parent / 'resources/secure-stone-412401-bef03f4658ac.json'
+GOOGLE_SHEETS_CREDENTIALS = BASE_DIR.parent / 'resources/secure-stone-412401-d836cb00a863.json'
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
@@ -40,9 +42,9 @@ if ENVIRONMENT == 'development':
 else: 
     DEBUG = False
 
-ALLOWED_HOSTS = ['localhost','housewise-admin.up.railway.app' ,'192.168.1.3',]
+ALLOWED_HOSTS = ['localhost','housewise-admin.up.railway.app' , '192.168.1.6', '192.168.1.8' ]
 
-CSRF_TRUSTED_ORIGINS = ['https://housewise-admin.up.railway.app' ]
+CSRF_TRUSTED_ORIGINS = ['https://housewise-admin.up.railway.app']
 
 AUTH_USER_MODEL = 'housewise.UserHousewise'
 
@@ -51,6 +53,8 @@ CACHES = {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
     }
 }
+
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Application definition
 
@@ -67,6 +71,8 @@ INSTALLED_APPS = [
      # mobile apps
     'rest_framework',
     'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',  # Add this line for token blacklisting
+
 
     #CORS
     'corsheaders',
@@ -75,21 +81,21 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
+    'corsheaders.middleware.CorsMiddleware',  # Must be before AuthenticationMiddleware
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'housewise.middleware.SessionCleanupMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.cache.UpdateCacheMiddleware',
     'django.middleware.cache.FetchFromCacheMiddleware',
-
-    #CORS
-    'corsheaders.middleware.CorsMiddleware',
-    'django.middleware.common.CommonMiddleware',
 ]
 
-CORS_ALLOW_ALL_ORIGINS = True
 
+
+CORS_ALLOW_ALL_ORIGINS = True
 
 
 
@@ -97,9 +103,28 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '5/minute',  # Limit anonymous requests
+        'user': '10/minute',  # Limit authenticated requests
+    },
 }
 
-
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=10),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+   'ROTATE_REFRESH_TOKENS': True,  # Issue new refresh token on each refresh
+    'BLACKLIST_AFTER_ROTATION': True,  # Blacklist old refresh tokens
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': 'your_secret_key',
+}
 
 # Cache settings for sensitive data
 CACHE_MIDDLEWARE_SECONDS = 0
@@ -136,12 +161,24 @@ DATABASES = {
         'PASSWORD': 'housewise123',
         'HOST': 'localhost',
         'PORT': '5432',
-    }
+    }   
 }
 
-POSTGRESS_LOCALLY = True
+POSTGRESS_LOCALLY = False
 if ENVIRONMENT == 'production' or POSTGRESS_LOCALLY == True:
-    DATABASES['default'] = dj_database_url.parse(env('DATABASE_URL'))
+    DATABASES['default'] = dj_database_url.parse(env('DATABASE_URL'), ssl_require=True)
+
+
+
+# settings.py
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'housewise.app@gmail.com'  # Replace with your Gmail address
+EMAIL_HOST_PASSWORD = 'dqzpoylyjztcnljs'  # Replace with the 16-character app password
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -176,10 +213,15 @@ USE_TZ = True
 # Set the timezone to Philippine Time
 TIME_ZONE = 'Asia/Manila'
 
+SESSION_COOKIE_AGE = 3600    # 1 hour
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'housewise/static')]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field

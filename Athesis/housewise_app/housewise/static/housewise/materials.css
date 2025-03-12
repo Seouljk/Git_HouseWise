@@ -194,10 +194,10 @@ body {
 
 .material-item {
     padding: 5px;   
-    margin: 5px;
+    margin-bottom: 10px;
     cursor: pointer;    
-    background-color: transparent;
-    border: 2px solid #1900ff; 
+    background-color: #f6ff00;
+    border: 2px solid #0b1623; 
     border-radius: 20px;
     text-align: center;
     font-size: 20px;
@@ -205,6 +205,12 @@ body {
 
 .material-item:hover {
     background-color: #ffd700;
+}
+
+.material-item.active {
+    background-color: #ffd700; /* Match the hover color */
+    border: 2px solid #ff9900; /* Optional: Emphasize the active state */
+    color: #000; /* Adjust text color for readability */
 }
 
 .material-button {

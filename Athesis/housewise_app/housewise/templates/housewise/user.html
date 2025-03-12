@@ -4,8 +4,12 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <script src="{% static 'housewise/javascript/user.js' %}"></script>
 <script src="{% static 'housewise/javascript/dropdown.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 
 <div class="container">
+    {% csrf_token %}
+    <meta name="csrf-token" content="{{ csrf_token }}">
     <div class="header">
         <div class="logo">
             <img src="{% static 'images/housewise.png' %}" alt="Logo" class="logo-image">
@@ -29,13 +33,52 @@
             </div>
         </div>
     </div>
+
+    <div class="graph-container">
+        <div class="graph-header">
+            <a href="{% url 'menu' user.username %}" class="back-btn">
+                <i class="fa-solid fa-arrow-left"></i> Back
+            </a>
+            <h2>User Graphs</h2>
+        </div>
+        <div class="graph-content">
+            <!-- First Container -->
+            <div class="graph-box">
+                <div class="info-container">
+                    <div class="info-box" id="total-users-logged-in">
+                        <p>Total Users Logged In</p>
+                        <h3>0</h3>
+                    </div>
+                    <div class="info-box" id="total-users">
+                        <p>Total User Accounts</p>
+                        <h3>0</h3>
+                    </div>                    
+                </div>                
+            </div>
+    
+            <!-- Second Container -->
+            <div class="graph-box">
+                <div class="info-container">
+                    <div class="info-box">
+                        <p>Total Feedback Received</p>
+                        <h3 id="total-feedbacks">0</h3> <!-- Dynamically update this -->
+                    </div>
+                </div>
+            </div>
+    
+            <!-- Third Container (Donut Chart Placeholder) -->
+            <div class="graph-box">
+                <canvas id="userDonutChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+
     <!-- Dashboard section -->
     <div class="dashboard-section">
         <div class="dashboard">
             <div class="dashboard-header">
-                <a href="{% url 'menu' user.username %}" class="back-btn">
-                    <i class="fa-solid fa-arrow-left"></i> Back
-                </a>
+            
                 <h2>Users</h2>
             </div>
 
@@ -44,7 +87,7 @@
                 {% if users %}
                     {% for user in users %}
                         <li class="user-item">
-                            <button class="user-button" onclick="showUserInfo('{{ user.user_id }}', '{{ user.name }}', '{{ user.age }}', '{{ user.username }}', '{{ user.password }}', '{{ user.email }}')">
+                            <button class="user-button" onclick="showUserInfo('{{ user.id }}', '{{ user.name }}', '{{ user.age }}', '{{ user.username }}', '{{ user.password }}', '{{ user.email }}')">
                                 {{ user.username }} 
                             </button>
                         </li>
@@ -56,55 +99,39 @@
         </div>
 
         <!-- User Info Column -->
-        <div class="user-info" id="user-info">
-            <div class="user-details-header">
-                <h3>User Details</h3>
-                <!-- Feedbacks Button beside User Details -->
-                <div class="feedbacks-container">
-                    <button class="feedback-btn" onclick="openFeedbackModal()">
-                        <i class="fa-regular fa-comment-dots"></i> Feedbacks
+        <div class="user-info" id="user-info" data-default="true">
+            <!-- Default Message -->
+            <div class="default-message" id="default-message">
+                <p>Click on a user to view information.</p>
+            </div>
+        
+            <!-- User Details Section -->
+            <div class="user-details" id="user-details" style="display: none;">
+                <div class="user-details-header">
+                    <h3>User Details</h3>
+                    <div class="feedbacks-container">
+                        <button class="feedback-btn" onclick="openFeedbackModal()">
+                            <i class="fa-regular fa-comment-dots"></i> Feedbacks
+                        </button>
+                    </div>
+                </div>
+                <p><strong>User ID:</strong> <span id="user-id"></span></p>
+                <p><strong>Name:</strong> <span id="user-name"></span></p>
+                <p><strong>Age:</strong> <span id="user-age"></span></p>
+                <p><strong>Username:</strong> <span id="user-username"></span></p>
+                <p><strong>Password:</strong> <span id="user-password"></span></p>
+                <p><strong>Email:</strong> <span id="user-email"></span></p>
+            
+                <div class="action-buttons">
+                    <button class="delete-btn">
+                        <i class="fas fa-trash-alt"></i> Delete
                     </button>
                 </div>
-            </div>
-            <p><strong>User ID:</strong> <span id="user-id"></span></p>
-            <p><strong>Name:</strong> <span id="user-name"></span></p>
-            <p><strong>Age:</strong> <span id="user-age"></span></p>
-            <p><strong>Username:</strong> <span id="user-username"></span></p>
-            <p><strong>Password:</strong> <span id="user-password"></span></p>
-            <p><strong>Email:</strong> <span id="user-email"></span></p>
+                <hr class="separator-line">
         
-            <!-- Action Buttons -->
-            <div class="action-buttons">
-                <button class="edit-btn">
-                    <i class="fas fa-edit"></i> Edit
-                </button>
-                <button class="delete-btn">
-                    <i class="fas fa-trash-alt"></i> Delete
-                </button>
-            </div>
-            <hr class="separator-line">
-             <!-- Login Logs -->
-             <div class="logs">
-                <h4 class="logs-heading">Login Logs:</h4>
-                <div class="log-entries">
-                    {% if selected_user %}
-                        {% for session in login_sessions %}
-                            <div class="log-entry">
-                                <p><strong>Login Date & Time:</strong> {{ session.login_time }}</p>
-                                <p><strong>Duration:</strong> 
-                                    {% if session.login_duration %}
-                                        {{ session.login_duration }}
-                                    {% else %}
-                                        Still logged in
-                                    {% endif %}
-                                </p>
-                            </div>
-                        {% empty %}
-                            <div class="log-entry">No login logs available.</div>
-                        {% endfor %}
-                    {% else %}
-                        <div class="log-entry">Select a user to view their login logs.</div>
-                    {% endif %}
+                <div class="logs">
+                    <h4 class="logs-heading">Login Logs:</h4>
+                    <div class="log-entries" id="log-entries"></div>
                 </div>
             </div>
         </div>
@@ -114,17 +141,108 @@
             <div class="modal-content">
                 <span class="close-btn" onclick="closeFeedbackModal()">&times;</span>
                 <h2>Feedbacks</h2>
-                <p>Empty feedbacks</p>
+                <div id="feedback-content" class="feedback-content">
+                    <!-- Feedbacks will be dynamically added here -->
+                </div>
             </div>
         </div>
+
     
     </div>
 </div>  
 
 <script>
+
+document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.user-item').forEach(item => {
+            item.addEventListener('click', function() {
+                document.querySelectorAll('.user-item').forEach(userItem => {
+                    userItem.classList.remove('active');
+                });
+                this.classList.add('active');
+            });
+        });
+    });
     
 document.querySelector('.dropdown-btn').addEventListener('click', function() {
     document.querySelector('.logout').classList.toggle('active');
     console.log("Dropdown toggled");
 });
+
+
+document.querySelector('.action-buttons .delete-btn').addEventListener('click', function() {
+    const userId = document.getElementById('user-id').textContent; // Get the selected user ID
+
+    if (userId) {
+        // Show a prompt asking for the delete code
+        const deleteCode = prompt("To confirm deletion, type the delete code: ");
+
+        // Check if the user entered the correct code
+        if (deleteCode === 'Gard') {
+            // Make a DELETE request to the server
+            fetch(`/housewise/delete_user/${userId}/`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCSRFToken(), // Ensure CSRF token is sent
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert('User deleted successfully!');
+                    location.reload(); // Refresh the page to update the user list
+                } else {
+                    alert('Failed to delete the user.');
+                }
+            })
+            .catch(error => {
+                console.error('Error deleting user:', error);
+                alert('An error occurred while deleting the user.');
+            });
+        } else if (deleteCode === null) {
+            // If user cancels the prompt, do nothing
+            alert("Deletion canceled.");
+        } else {
+            // If the code is incorrect
+            alert("Incorrect code. Deletion not authorized.");
+        }
+    } else {
+        alert('No user selected.');
+    }
+});
+
+// Function to get CSRF token
+function getCSRFToken() {
+    return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+}
+
+
+document.addEventListener('DOMContentLoaded', function () {
+    const urlParams = new URLSearchParams(window.location.search);
+    const selectedId = urlParams.get('selected_id');
+
+    if (selectedId) {
+        // Highlight the corresponding user item
+        const userButton = document.querySelector(`.user-button[onclick*="'${selectedId}'"]`);
+        if (userButton) {
+            userButton.parentElement.classList.add('active'); // Add 'active' class to parent <li>
+
+            // Extract user details from the onclick function
+            const onclickContent = userButton.getAttribute('onclick');
+            const regex = /showUserInfo\((.*?)\)/;
+            const matches = regex.exec(onclickContent);
+            if (matches && matches[1]) {
+                const userInfo = matches[1].split(',').map(value => value.trim().replace(/['"]/g, ''));
+                const [id, name, age, username, password, email] = userInfo;
+
+                // Populate user details
+                showUserInfo(id, name, age, username, password, email);
+            }
+        } else {
+            console.error('No matching user button found for selected_id:', selectedId);
+        }
+    }
+});
+
+
 </script>

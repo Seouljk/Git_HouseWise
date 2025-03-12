@@ -12,7 +12,7 @@ import re
 # Define Google Sheets setup
 SCOPE = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
 SHEET_NAME = 'Housewise Crawler Results'  # Update with your Google Sheet name
-CREDENTIALS_FILE = r'C:\Git_HouseWise\Athesis\resources\secure-stone-412401-bef03f4658ac.json'  # Your Google credentials
+CREDENTIALS_FILE = r'C:\Git_HouseWise\Athesis\resources\secure-stone-412401-d836cb00a863.json'  # Your Google credentials
 
 # Cache expiration (1 hour)
 CACHE_EXPIRATION = 60  # in seconds
@@ -63,8 +63,8 @@ class Command(BaseCommand):
         self.stdout.write(f"Scraping Constph links...")
         self.scrape_website_links(constph_links, sheet, cache, MATERIALS, self.scrape_constph)
 
-        # self.stdout.write(f"Scraping Constructph links...")
-        # self.scrape_website_links(constructph_links, sheet, cache, MATERIALS, self.scrape_constructph)
+        self.stdout.write(f"Scraping Constructph links...")
+        self.scrape_website_links(constructph_links, sheet, cache, MATERIALS, self.scrape_constructph)
 
         self.stdout.write(f"Scraping PinoyBuilders links...")
         self.scrape_website_links(pinoybuilders_links, sheet, cache, MATERIALS, self.scrape_pinoybuilders)

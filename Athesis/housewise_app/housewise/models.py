@@ -1,8 +1,10 @@
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
 from django.utils import timezone
-from django.contrib.auth.hashers import make_password, check_password
+from django.contrib.auth.hashers import make_password, check_password, is_password_usable
 from django.contrib import admin
+from datetime import date
+
 
 class UserType(models.Model):
     usertype_id = models.AutoField(primary_key=True)
@@ -26,11 +28,21 @@ class UserHousewiseManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, username, email, password=None, **extra_fields):
+    def create_superuser(self, username, email=None, password=None, **extra_fields):
+        extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
-        extra_fields.setdefault('is_staff', True)  # Ensure staff status is set
-        admin_type = UserType.objects.get(user_type='admin')
-        extra_fields['user_type'] = admin_type
+
+        if extra_fields.get('is_staff') is not True:
+            raise ValueError('Superuser must have is_staff=True.')
+        if extra_fields.get('is_superuser') is not True:
+            raise ValueError('Superuser must have is_superuser=True.')
+
+         # Ensure a user type is set (assuming Admin is represented by 'admin')
+        if 'user_type' not in extra_fields:
+            admin_usertype = UserType.objects.filter(user_type='admin').first()
+            if not admin_usertype:
+                raise ValueError("Admin user type must exist in UserType table.")
+            extra_fields['user_type'] = admin_usertype  # Use the UserType instance, not usertype_id
 
         return self.create_user(username, email, password, **extra_fields)
     
@@ -40,10 +52,14 @@ class UserHousewise(AbstractBaseUser, PermissionsMixin):
     username = models.CharField(max_length=100, unique=True)
     email = models.EmailField(unique=True)
     name = models.CharField(max_length=100)
-    age = models.PositiveIntegerField()
+    age = models.PositiveIntegerField(null=True, blank=True)
+    birthdate = models.DateField(null=True, blank=True)
     user_type = models.ForeignKey(UserType, on_delete=models.CASCADE, related_name="user")
     last_login = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    is_staff = models.BooleanField(default=False)  # Change to a regular field
+    is_active = models.BooleanField(default=True)
+    profile_icon = models.CharField(max_length=255, null=True, blank=True, default=27)  # Default icon path
 
     objects = UserHousewiseManager()
 
@@ -51,27 +67,24 @@ class UserHousewise(AbstractBaseUser, PermissionsMixin):
     REQUIRED_FIELDS = ['email']  # Add any other fields that are required
 
     def save(self, *args, **kwargs):
-        # Only hash password on creation
-        if not self.pk and self.password:
+        # Only hash the password if it's not usable (i.e., not already hashed)
+        if not is_password_usable(self.password):
             self.password = make_password(self.password)
+
+        if self.birthdate:
+            today = date.today()
+            self.age = today.year - self.birthdate.year - (
+                (today.month, today.day) < (self.birthdate.month, self.birthdate.day)
+            )
+
         super(UserHousewise, self).save(*args, **kwargs)
 
-    def check_password(self, raw_password):
-        return check_password(raw_password, self.password)
+    def check_password(self, password):
+        return check_password(password, self.password)
 
     def __str__(self):
         return self.username
-    
-    @property
-    def is_staff(self):
-        # Determine if user has admin privileges based on their user_type
-        return self.user_type.user_type.lower() == 'admin' and self.user_type.status
 
-    @property
-    def is_active(self):
-        # Determine if the user is active based on the status in UserType
-        return self.user_type.status
-    
 
 class LoginSession(models.Model):
     loginsession_id = models.AutoField(primary_key=True)
@@ -92,20 +105,41 @@ class HouseType(models.Model):
     def __str__(self):
         return self.description
 
-#Project Build
+
+# Project Build
 class Project(models.Model):
     project_id = models.AutoField(primary_key=True)
     user = models.ForeignKey(UserHousewise, on_delete=models.CASCADE, related_name="projects")
+    project_name = models.CharField(max_length=255, default="Unnamed Project")  # New field for project name
     length = models.DecimalField(max_digits=5, decimal_places=2)  # Meters with decimals
     width = models.DecimalField(max_digits=5, decimal_places=2)  # Meters with decimals
     height = models.DecimalField(max_digits=5, decimal_places=2)  # Meters with decimals
-    cost = models.DecimalField(max_digits=10, decimal_places=2)  # Amount with decimals
+    cr_count = models.PositiveIntegerField(default=0)  # New field for CR count
+    room_count = models.PositiveIntegerField(default=0)  # New field for room count
     date_time_created = models.DateTimeField(auto_now_add=True)  # Auto-generate date and time
     house_type = models.ForeignKey(HouseType, on_delete=models.CASCADE, related_name="projects")
+    likes_count = models.PositiveIntegerField(default=0)  # Number of likes, default to 0
+    is_published = models.BooleanField(default=False)  # Default is not published
 
     def __str__(self):
-        return f"Project {self.project_id} for {self.user.username}"
-    
+        return f"{self.project_name} (ID: {self.project_id}) for {self.user.username}"
+
+    def update_counts(self):
+        """Update the room and CR counts."""
+        self.room_count = self.rooms.count()
+        self.cr_count = self.crs.count()
+        self.save()
+        
+class ProjectLike(models.Model):
+    user = models.ForeignKey(UserHousewise, on_delete=models.CASCADE, related_name="liked_projects")
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="project_likes")  # Change related_name
+    liked_on = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'project')  # Prevent duplicate likes from the same user
+
+
+
 #Feedbacks
 class Feedback(models.Model):
     feedback_id = models.AutoField(primary_key=True)
@@ -147,15 +181,37 @@ class Roof(models.Model):
     def __str__(self):
         return f"{self.roof_type} with {self.trusses}"
 
-#Rooms
 class Rooms(models.Model):
+    ROOM_NUMBER_CHOICES = [
+        ('1', '1'),
+        ('2', '2'),
+    ]
+
+    ACTIVE_BUTTON_CHOICES = [
+        ('TopStart', 'TopStart'),
+        ('TopEnd', 'TopEnd'),
+        ('BottomStart', 'BottomStart'),
+        ('BottomEnd', 'BottomEnd'),
+    ]
+
     room_id = models.AutoField(primary_key=True)
+    room_number = models.CharField(
+        max_length=1, 
+        choices=ROOM_NUMBER_CHOICES, 
+        default='1'
+    )  # New field with options '1' or '2'
     room_length = models.DecimalField(max_digits=5, decimal_places=2)  # Meters with decimals
     room_width = models.DecimalField(max_digits=5, decimal_places=2)   # Meters with decimals
+    active_button = models.CharField(
+        max_length=20,
+        choices=ACTIVE_BUTTON_CHOICES,
+        default='TopStart'
+    )  # New field for ActiveButton with options
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="rooms")
 
     def __str__(self):
-        return f"Room {self.room_id} - {self.room_length}m x {self.room_width}m"
+        return f"Room {self.room_number}: {self.room_length}m x {self.room_width}m with ActiveButton at {self.active_button}"
+
 
 #CR
 class CR(models.Model):
